@@ -356,9 +356,7 @@
 <section class="hero">
   <div class="hero-img"></div>
   <div class="hero-content">
-    <div class="hero-name">Rodrigo <span>Gilabert</span></div>
-    <div class="hero-subtitle">Profesor de Tenis de Mesa</div>
-    <p id="heroBio">Clases individuales para todos los niveles, desde principiantes hasta competidores.</p>
+<p id="heroBio">Clases individuales para todos los niveles, desde principiantes hasta competidores.</p>
     <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
       <button class="btn btn-primary" onclick="scrollToCalendar()">Ver disponibilidad →</button>
       <button class="btn btn-wa" onclick="contactarWA()">Consultar por WhatsApp</button>
@@ -384,11 +382,6 @@
 <section class="info-strip">
   <div class="info-grid">
     <div class="info-card">
-      <div class="ic-ico">🎯</div>
-      <div class="ic-val">Todos los niveles</div>
-      <div class="ic-lbl">Principiante · Intermedio · Avanzado</div>
-    </div>
-    <div class="info-card">
       <div class="ic-ico">🏓</div>
       <div class="ic-val">King Pong</div>
       <div class="ic-lbl">Luis Viale 526 · CABA</div>
@@ -402,11 +395,6 @@
       <div class="ic-ico">🕐</div>
       <div class="ic-val">Lun — Sáb</div>
       <div class="ic-lbl">9:30 a 19:30 hs</div>
-    </div>
-    <div class="info-card">
-      <div class="ic-ico">💬</div>
-      <div class="ic-val">Respuesta rápida</div>
-      <div class="ic-lbl">Coordinación por WhatsApp</div>
     </div>
   </div>
 </section>
@@ -566,6 +554,12 @@ const DEFAULT_CFG = {
 
 let cfg       = Object.assign({}, DEFAULT_CFG, JSON.parse(localStorage.getItem('rg_cfg') || '{}'));
 let ocupados  = JSON.parse(localStorage.getItem('rg_ocu') || '{}'); // { 'YYYY-MM-DD_slot': true }
+
+// Slots siempre ocupados: { dia: 0=Lun…5=Sáb, slot: número }
+const SIEMPRE_OCUPADO = [
+  { dia: 0, slot: 0 },  // Lunes 9:30
+  { dia: 5, slot: 5 },  // Sábado 12:00
+];
 let adminMode = false;
 let semanaOff = 0;
 
@@ -642,7 +636,7 @@ function renderCalendario() {
       const cell = document.createElement('div');
       const fk   = fkey(fecha);
       const sk   = slotKey(fk, s);
-      const ocup = !!ocupados[sk];
+      const ocup = !!ocupados[sk] || SIEMPRE_OCUPADO.some(x => x.dia === di && x.slot === s);
       cell.className = 'cal-cell ' + (ocup ? 'ocupado' : 'libre');
       cell.dataset.fecha = fk;
       cell.dataset.slot  = s;
