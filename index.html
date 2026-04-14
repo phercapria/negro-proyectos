@@ -948,6 +948,15 @@ function rechazarSolicitud(sk) {
 }
 
 // ─── MODAL: POSTULARSE ────────────────────────────────────────────
+function parsePrecioNum(precioStr) {
+  // Extracts numeric value from strings like '$45.000' or '$15.000'
+  return parseInt((precioStr || '').replace(/[^\d]/g, ''), 10) || 0;
+}
+function formatPrecio(num) {
+  // Formats number back to '$45.000' style
+  return '$' + num.toLocaleString('es-AR');
+}
+
 function abrirPostula(fecha, slot, dateObj, diaIdx) {
   slotSel = { fecha, slot, diaLabel: DIAS[diaIdx], fecha_obj: dateObj };
   const horaStr = slotAHora(slot);
@@ -957,6 +966,11 @@ function abrirPostula(fecha, slot, dateObj, diaIdx) {
   document.getElementById('postNombre').value = '';
   document.getElementById('postWA').value     = '';
   document.getElementById('postNota').value   = '';
+  // Update duration options with prices from config
+  const p1 = parsePrecioNum(cfg.precio);
+  const sel = document.getElementById('postDuracion');
+  sel.options[0].text = p1 ? `1 hora (${formatPrecio(p1)})` : '1 hora';
+  sel.options[1].text = p1 ? `2 horas (${formatPrecio(p1 * 2)})` : '2 horas';
   abrirModal('modalPostula');
 }
 
