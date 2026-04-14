@@ -545,9 +545,9 @@ const DEFAULT_CFG = {
 
 // ─── MIGRACIÓN: limpiar datos viejos al cambiar versión ──────────
 (function migrate() {
-  if (localStorage.getItem('rg_version') !== '2') {
+  if (localStorage.getItem('rg_version') !== '3') {
     ['rg_ocu','rg_pen','rg_fij','rg_franjas','rg_demo_init'].forEach(k => localStorage.removeItem(k));
-    localStorage.setItem('rg_version', '2');
+    localStorage.setItem('rg_version', '3');
   }
 })();
 
