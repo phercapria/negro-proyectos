@@ -395,28 +395,42 @@
       .week-arrow { width:34px; height:34px; }
       .week-arrow svg { width:14px; height:26px; }
 
-      /* Hero mobile */
-      .hero { height:62vh; min-height:360px; }
+      /* Hero mobile — 40px menos alto para subir todo */
+      .hero { height:57vh; min-height:320px; }
       .hero-img { background-size:100% auto; background-position:center 0%; }
 
-      /* Gradiente más temprano: la imagen se esfuma hacia el 65% del hero */
+      /* Esfumado fuerte: arranca al 18% y es negro puro al 68% */
       .hero-img::after {
         background: linear-gradient(
           to bottom,
-          rgba(0,0,0,0)    0%,
-          rgba(0,0,0,0)    28%,
-          rgba(0,11,9,.55) 52%,
-          rgba(0,11,9,.92) 68%,
-          rgba(0,11,9,1)   78%
+          rgba(0,0,0,0)     0%,
+          rgba(0,0,0,0)     18%,
+          rgba(0,11,9,.35)  36%,
+          rgba(0,11,9,.75)  54%,
+          rgba(0,11,9,.95)  66%,
+          rgba(0,11,9,1)    72%
         );
       }
+      /* Capa extra de oscurecimiento para reforzar el esfumado */
+      .hero-img::before {
+        content:'';
+        position:absolute; inset:0;
+        background: linear-gradient(
+          to bottom,
+          rgba(0,0,0,0)   0%,
+          rgba(0,0,0,0)   40%,
+          rgba(0,0,0,.30) 70%,
+          rgba(0,0,0,.55) 100%
+        );
+        z-index:1;
+      }
 
-      /* Contenido más arriba, menos espacio entre imagen y texto */
-      .hero-content { padding:0 20px 20px; }
-      .hero-headline { font-size:clamp(1.45rem,6vw,1.85rem); margin-bottom:16px; }
-      .btn-hero { padding:13px 28px; font-size:.88rem; }
+      /* Título +35%, botón +35%, menos padding */
+      .hero-content { padding:0 20px 18px; }
+      .hero-headline { font-size:clamp(1.95rem,8vw,2.5rem); margin-bottom:18px; }
+      .btn-hero { padding:17px 38px; font-size:1.18rem; }
 
-      /* Flecha: ocultar en mobile (el calendario ya se ve sin scrollear) */
+      /* Flecha: ocultar en mobile */
       .hero-scroll { display:none; }
 
       /* Calendario mobile: 3 días — FLEXBOX (más fiable en iOS Safari) */
