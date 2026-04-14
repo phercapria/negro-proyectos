@@ -529,7 +529,10 @@ function upsertAlumno(nombre, extra={}) {
 }
 
 // ── AUTOCOMPLETE ──────────────────────────────────────────────────
+let acSelectedId = null; // ID del alumno elegido desde el dropdown
+
 function acUpdate() {
+  acSelectedId = null; // el usuario está escribiendo → limpiar selección previa
   const q = (document.getElementById('inpNombre').value || '').trim().toLowerCase();
   const list = document.getElementById('acList');
   if (!q) { list.classList.add('hidden'); return; }
@@ -542,14 +545,15 @@ function acUpdate() {
     .slice(0, 6);
   if (!matches.length) { list.classList.add('hidden'); return; }
   list.innerHTML = matches.map(a =>
-    `<div class="ac-item" onmousedown="acSelect(${JSON.stringify(a.nombre)})">
+    `<div class="ac-item" onmousedown="acSelect(${JSON.stringify(a.id)}, ${JSON.stringify(a.nombre)})">
       ${a.nombre}${a.wa ? '<span style="font-size:.73rem;color:var(--suave);margin-left:8px;">'+a.wa+'</span>' : ''}
     </div>`
   ).join('');
   list.classList.remove('hidden');
 }
 function acHide() { setTimeout(()=>{ const l=document.getElementById('acList'); if(l) l.classList.add('hidden'); }, 160); }
-function acSelect(nombre) {
+function acSelect(id, nombre) {
+  acSelectedId = id; // marcar que este alumno ya existe, no crear duplicado
   document.getElementById('inpNombre').value = nombre;
   document.getElementById('acList').classList.add('hidden');
 }
@@ -647,6 +651,7 @@ function renderSlots() {
         document.querySelectorAll('.tbtn').forEach(b=>b.classList.remove('sel'));
         btn.classList.add('sel'); selSlot=s;
         document.getElementById('inpNombre').value='';
+        acSelectedId = null;
         document.getElementById('secNombre').classList.remove('hidden');
         document.getElementById('secNombre').scrollIntoView({behavior:'smooth',block:'nearest'});
       };
@@ -689,7 +694,9 @@ function guardarClase() {
     saveOcu();
     toast('Clase cargada' + (sede ? ' — ' + sede : ''));
   }
-  if (nombre) upsertAlumno(nombre);
+  // Solo crear/actualizar alumno si el nombre fue escrito a mano (no seleccionado del dropdown)
+  if (nombre && !acSelectedId) upsertAlumno(nombre);
+  acSelectedId = null; // resetear para la próxima carga
   selSlot = null;
   document.getElementById('secNombre').classList.add('hidden');
   document.getElementById('secFijoDias').classList.add('hidden');
