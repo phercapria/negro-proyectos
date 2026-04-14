@@ -1245,18 +1245,12 @@ function init() {
     }
   }, { passive:true });
 
-  // Mouse wheel horizontal (trackpad o scroll lateral)
-  let wheelTimer = null;
+  // Mouse wheel horizontal (solo mobile, en desktop no cambia semana con scroll)
   wrapper.addEventListener('wheel', e => {
-    if (Math.abs(e.deltaX) < Math.abs(e.deltaY)) return; // scroll vertical = ignorar
+    if (!esMobile()) return; // desktop: no hacer nada con el scroll
+    if (Math.abs(e.deltaX) < Math.abs(e.deltaY)) return;
     e.preventDefault();
-    if (wheelTimer) return;
-    wheelTimer = setTimeout(() => { wheelTimer = null; }, 400);
-    if (esMobile()) {
-      cambiarDiasMobile(e.deltaX > 0 ? 1 : -1);
-    } else {
-      cambiarSemana(e.deltaX > 0 ? 1 : -1);
-    }
+    cambiarDiasMobile(e.deltaX > 0 ? 1 : -1);
   }, { passive:false });
 }
 
