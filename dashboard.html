@@ -162,6 +162,35 @@
     .btn-no  { flex:1; padding:10px; border-radius:8px; border:1px solid rgba(255,45,32,.3); background:rgba(255,45,32,.1); color:#ff6b60; font-size:.8rem; font-weight:700; cursor:pointer; font-family:inherit; min-width:80px; }
     .empty { text-align:center; padding:56px 20px; color:var(--suave); font-size:.9rem; }
 
+    /* ── ALUMNOS ── */
+    .ac-wrap { position:relative; }
+    .ac-list { position:absolute; top:calc(100% + 4px); left:0; right:0; background:#1e1e1e; border:1.5px solid var(--verde); border-radius:10px; z-index:300; overflow:hidden; box-shadow:0 8px 24px rgba(0,0,0,.6); }
+    .ac-item { padding:12px 16px; font-size:.9rem; font-weight:600; cursor:pointer; border-bottom:1px solid #272727; transition:background .1s; }
+    .ac-item:last-child { border-bottom:none; }
+    .ac-item:hover, .ac-item.ac-focus { background:rgba(37,211,102,.13); color:var(--verde); }
+    .alu-search-bar { padding:14px 20px 0; }
+    .alu-search-bar input { width:100%; padding:11px 16px; background:var(--fondo3); border:1.5px solid var(--borde); border-radius:10px; color:var(--texto); font-size:.92rem; font-family:inherit; }
+    .alu-search-bar input:focus { outline:none; border-color:var(--verde); }
+    .alu-add-btn { display:flex; align-items:center; justify-content:center; gap:8px; margin:14px 20px 0; padding:12px; border-radius:10px; border:1.5px dashed rgba(37,211,102,.35); background:rgba(37,211,102,.05); color:var(--verde); font-size:.85rem; font-weight:700; cursor:pointer; font-family:inherit; transition:all .15s; }
+    .alu-add-btn:hover { background:rgba(37,211,102,.1); border-color:var(--verde); }
+    .alu-list { padding:12px 20px; display:flex; flex-direction:column; gap:9px; }
+    .alu-card { background:var(--fondo2); border:1px solid var(--borde); border-radius:12px; padding:13px 16px; display:flex; align-items:center; gap:12px; cursor:pointer; transition:border-color .15s; }
+    .alu-card:hover { border-color:var(--verde); }
+    .alu-avatar { width:40px; height:40px; border-radius:50%; background:rgba(37,211,102,.14); flex-shrink:0; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:.95rem; color:var(--verde); }
+    .alu-info { flex:1; min-width:0; }
+    .alu-info h4 { font-size:.9rem; font-weight:700; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .alu-info p  { font-size:.74rem; color:var(--suave); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .alu-chevron { color:#3a3a3a; font-size:1.3rem; flex-shrink:0; }
+    .alu-edit { padding:14px 20px 100px; }
+    .alu-edit .fg { margin-bottom:14px; }
+    .alu-edit .fg label { display:block; font-size:.7rem; font-weight:700; color:var(--suave); text-transform:uppercase; letter-spacing:.06em; margin-bottom:6px; }
+    .alu-edit .fg input,
+    .alu-edit .fg textarea { width:100%; padding:12px 16px; background:var(--fondo3); border:1.5px solid var(--borde); border-radius:10px; color:var(--texto); font-size:.92rem; font-family:inherit; resize:vertical; }
+    .alu-edit .fg input:focus,
+    .alu-edit .fg textarea:focus { outline:none; border-color:var(--verde); }
+    .alu-actions { display:flex; gap:8px; margin-top:20px; }
+    .btn-del-alu { padding:12px 18px; border-radius:10px; border:1px solid rgba(255,45,32,.3); background:rgba(255,45,32,.1); color:#ff6b60; font-size:.82rem; font-weight:700; cursor:pointer; font-family:inherit; flex-shrink:0; }
+
     /* ── BOTTOM NAV ── */
     .bottom-nav { position:fixed; bottom:0; left:0; right:0; background:var(--fondo2); border-top:1px solid var(--borde); display:flex; padding:8px 0 max(8px, env(safe-area-inset-bottom)); z-index:200; }
     .bnav-btn { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; background:none; border:none; color:var(--suave); font-size:.58rem; font-weight:700; cursor:pointer; padding:4px 0; transition:color .15s; position:relative; }
@@ -219,6 +248,10 @@
       <div class="card-text"><h3>Solicitudes</h3><p>Confirmar o rechazar pedidos de alumnos.</p></div>
       <span class="card-badge hidden" id="homeBadge">0</span>
     </div>
+    <div class="home-card" onclick="ir('alumnos')">
+      <div class="card-icon" style="background:rgba(91,154,245,.1);width:48px;height:48px;border-radius:13px;flex-shrink:0;display:flex;align-items:center;justify-content:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#5b9af5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></div>
+      <div class="card-text"><h3>Alumnos</h3><p>Base de datos de alumnos, paleta, categorias y mas.</p></div>
+    </div>
   </div>
 </div>
 
@@ -265,7 +298,10 @@
     </div>
     <div class="field-group">
       <label>Nombre del alumno (opcional)</label>
-      <input type="text" id="inpNombre" placeholder="Ej: Juan Garcia" maxlength="40">
+      <div class="ac-wrap">
+        <input type="text" id="inpNombre" placeholder="Ej: Juan Garcia" maxlength="40" autocomplete="off" oninput="acUpdate()" onfocus="acUpdate()" onblur="acHide()">
+        <div class="ac-list hidden" id="acList"></div>
+      </div>
     </div>
     <button class="btn-save" onclick="guardarClase()">Guardar</button>
   </div>
@@ -330,6 +366,40 @@
   <div class="soli-list" id="soliList"></div>
 </div>
 
+<!-- ── ALUMNOS ── -->
+<div class="view" id="viewAlumnos">
+  <div class="view-hdr">
+    <button class="btn-back" onclick="aluBack()">‹</button>
+    <h2 id="aluViewTitle">Alumnos</h2>
+  </div>
+  <!-- Lista -->
+  <div id="aluListPanel">
+    <div class="alu-search-bar">
+      <input type="search" placeholder="Buscar alumno..." id="aluSearchInput" oninput="renderAlumnosList()" autocomplete="off">
+    </div>
+    <button class="alu-add-btn" onclick="openAlumnoNew()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Nuevo alumno
+    </button>
+    <div class="alu-list" id="aluList"></div>
+  </div>
+  <!-- Editar -->
+  <div id="aluEditPanel" class="hidden alu-edit">
+    <div class="fg"><label>Nombre</label><input type="text" id="aluNombre" maxlength="60" placeholder="Nombre completo"></div>
+    <div class="fg"><label>WhatsApp</label><input type="tel" id="aluWA" placeholder="Sin codigo de pais, ej: 1154811624" maxlength="20"></div>
+    <div class="fg"><label>Mail</label><input type="email" id="aluMail" placeholder="juan@mail.com"></div>
+    <div class="fg"><label>Paleta</label><input type="text" id="aluPaleta" placeholder="Marca y modelo" maxlength="80"></div>
+    <div class="fg"><label>Cumpleanos</label><input type="text" id="aluCumple" placeholder="DD/MM/AAAA" maxlength="10"></div>
+    <div class="fg"><label>Categoria TMT</label><input type="text" id="aluCatTmt" placeholder="Ej: 1500 puntos" maxlength="60"></div>
+    <div class="fg"><label>Categoria FETEMBA</label><input type="text" id="aluCatFet" placeholder="Ej: Serie B" maxlength="60"></div>
+    <div class="fg"><label>Otros</label><textarea id="aluOtros" rows="3" placeholder="Nivel, objetivos, observaciones..."></textarea></div>
+    <div class="alu-actions">
+      <button class="btn-save" style="flex:1" onclick="saveAlumnoEdit()">Guardar</button>
+      <button class="btn-del-alu" id="btnDelAlu" onclick="deleteAlumno()">Eliminar</button>
+    </div>
+  </div>
+</div>
+
 <!-- BOTTOM NAV -->
 <nav class="bottom-nav">
   <button class="bnav-btn active" id="bn-home" onclick="ir('home')">
@@ -342,11 +412,11 @@
   </button>
   <button class="bnav-btn" id="bn-calendario" onclick="ir('calendario')">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-    Calendario
+    Cal
   </button>
-  <button class="bnav-btn" id="bn-franjas" onclick="ir('franjas')">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="4" rx="1"/><rect x="3" y="10" width="10" height="4" rx="1"/><rect x="3" y="17" width="14" height="4" rx="1"/></svg>
-    Franjas
+  <button class="bnav-btn" id="bn-alumnos" onclick="ir('alumnos')">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+    Alumnos
   </button>
   <button class="bnav-btn" id="bn-solicitudes" onclick="ir('solicitudes')">
     <span class="bnav-badge hidden" id="navBadge">0</span>
@@ -382,6 +452,52 @@ function saveFij() { localStorage.setItem('rg_fij', JSON.stringify(fijos)); }
 function savePen() { localStorage.setItem('rg_pen', JSON.stringify(pendientes)); }
 function saveFranjas() { localStorage.setItem('rg_franjas', JSON.stringify(franjas)); }
 
+// ── ALUMNOS DATA ──────────────────────────────────────────────────
+let alumnos = JSON.parse(localStorage.getItem('rg_alumnos') || '{}');
+function saveAlumnos() { localStorage.setItem('rg_alumnos', JSON.stringify(alumnos)); }
+
+function upsertAlumno(nombre, extra={}) {
+  if (!nombre || !nombre.trim()) return null;
+  const norm = nombre.trim();
+  const existing = Object.values(alumnos).find(a => a.nombre.toLowerCase() === norm.toLowerCase());
+  if (existing) {
+    let changed = false;
+    ['wa','mail'].forEach(k => { if (extra[k] && !existing[k]) { existing[k]=extra[k]; changed=true; } });
+    if (changed) saveAlumnos();
+    return existing.id;
+  }
+  const id = Date.now().toString(36) + Math.random().toString(36).slice(2,5);
+  alumnos[id] = { id, nombre:norm, wa:extra.wa||'', mail:'', paleta:'', cumple:'', catTmt:'', catFet:'', otros:'', creado:new Date().toISOString() };
+  saveAlumnos();
+  return id;
+}
+
+// ── AUTOCOMPLETE ──────────────────────────────────────────────────
+function acUpdate() {
+  const q = (document.getElementById('inpNombre').value || '').trim().toLowerCase();
+  const list = document.getElementById('acList');
+  if (!q) { list.classList.add('hidden'); return; }
+  const matches = Object.values(alumnos)
+    .filter(a => a.nombre.toLowerCase().includes(q))
+    .sort((a,b) => {
+      const ai = a.nombre.toLowerCase().indexOf(q), bi = b.nombre.toLowerCase().indexOf(q);
+      return ai - bi || a.nombre.localeCompare(b.nombre);
+    })
+    .slice(0, 6);
+  if (!matches.length) { list.classList.add('hidden'); return; }
+  list.innerHTML = matches.map(a =>
+    `<div class="ac-item" onmousedown="acSelect(${JSON.stringify(a.nombre)})">
+      ${a.nombre}${a.wa ? '<span style="font-size:.73rem;color:var(--suave);margin-left:8px;">'+a.wa+'</span>' : ''}
+    </div>`
+  ).join('');
+  list.classList.remove('hidden');
+}
+function acHide() { setTimeout(()=>{ const l=document.getElementById('acList'); if(l) l.classList.add('hidden'); }, 160); }
+function acSelect(nombre) {
+  document.getElementById('inpNombre').value = nombre;
+  document.getElementById('acList').classList.add('hidden');
+}
+
 function fkey(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 function sk(f,s) { return `${f}_${s}`; }
 function hora(s) { const m=MIN_INI+s*60; return `${String(Math.floor(m/60)).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`; }
@@ -414,6 +530,7 @@ function ir(v) {
   if (v==='franjas')     renderFranjas();
   if (v==='solicitudes') renderSolicitudes();
   if (v==='home')        renderHome();
+  if (v==='alumnos')     { showAluList(); }
   window.scrollTo(0,0);
 }
 
@@ -516,6 +633,7 @@ function guardarClase() {
     saveOcu();
     toast('Clase cargada' + (sede ? ' — ' + sede : ''));
   }
+  if (nombre) upsertAlumno(nombre);
   selSlot = null;
   document.getElementById('secNombre').classList.add('hidden');
   document.getElementById('secFijoDias').classList.add('hidden');
@@ -793,16 +911,113 @@ function aprobar(key) {
   const p=pendientes[key]; if(!p)return;
   ocupados[key]={nombre:p.nombre,sede:p.sede}; delete pendientes[key];
   saveOcu(); savePen(); renderSolicitudes(); renderHome(); toast('Clase confirmada');
+  if (p.nombre) upsertAlumno(p.nombre, { wa: p.wa });
   waConfirm(p, 'puntual');
 }
 function aprobarFijo(key) {
   const p=pendientes[key]; if(!p)return;
   fijos[p.dia+'_'+p.slot]={nombre:p.nombre,sede:p.sede}; delete pendientes[key];
   saveFij(); savePen(); renderSolicitudes(); renderHome(); toast('Alumno fijo registrado');
+  if (p.nombre) upsertAlumno(p.nombre, { wa: p.wa });
   waConfirm(p, 'fijo');
 }
 function rechazar(key) {
   delete pendientes[key]; savePen(); renderSolicitudes(); renderHome(); toast('Solicitud rechazada');
+}
+
+// ── ALUMNOS UI ────────────────────────────────────────────────────
+let editingAluId = null;
+
+function showAluList() {
+  editingAluId = null;
+  document.getElementById('aluListPanel').classList.remove('hidden');
+  document.getElementById('aluEditPanel').classList.add('hidden');
+  document.getElementById('aluViewTitle').textContent = 'Alumnos';
+  renderAlumnosList();
+}
+
+function renderAlumnosList() {
+  const q = (document.getElementById('aluSearchInput')?.value || '').trim().toLowerCase();
+  const list = document.getElementById('aluList');
+  let arr = Object.values(alumnos);
+  if (q) arr = arr.filter(a => a.nombre.toLowerCase().includes(q) || (a.mail||'').toLowerCase().includes(q));
+  arr.sort((a,b) => a.nombre.localeCompare(b.nombre));
+  if (!arr.length) {
+    list.innerHTML = '<div class="empty">' + (q ? 'Sin resultados' : 'Todavia no hay alumnos registrados') + '</div>';
+    return;
+  }
+  list.innerHTML = arr.map(a => {
+    const ini = a.nombre.split(' ').map(w=>w[0]||'').join('').slice(0,2).toUpperCase();
+    const sub = [a.mail, a.wa ? 'WA '+a.wa : ''].filter(Boolean).join(' · ') || 'Sin info adicional';
+    return `<div class="alu-card" onclick="openAlumnoEdit('${a.id}')">
+      <div class="alu-avatar">${ini}</div>
+      <div class="alu-info"><h4>${a.nombre}</h4><p>${sub}</p></div>
+      <div class="alu-chevron">›</div>
+    </div>`;
+  }).join('');
+}
+
+function openAlumnoEdit(id) {
+  const a = alumnos[id]; if (!a) return;
+  editingAluId = id;
+  document.getElementById('aluNombre').value  = a.nombre  || '';
+  document.getElementById('aluWA').value      = a.wa      || '';
+  document.getElementById('aluMail').value    = a.mail    || '';
+  document.getElementById('aluPaleta').value  = a.paleta  || '';
+  document.getElementById('aluCumple').value  = a.cumple  || '';
+  document.getElementById('aluCatTmt').value  = a.catTmt  || '';
+  document.getElementById('aluCatFet').value  = a.catFet  || '';
+  document.getElementById('aluOtros').value   = a.otros   || '';
+  document.getElementById('aluListPanel').classList.add('hidden');
+  document.getElementById('aluEditPanel').classList.remove('hidden');
+  document.getElementById('aluViewTitle').textContent = a.nombre;
+  window.scrollTo(0,0);
+}
+
+function openAlumnoNew() {
+  const newId = Date.now().toString(36) + Math.random().toString(36).slice(2,5);
+  alumnos[newId] = { id:newId, nombre:'', wa:'', mail:'', paleta:'', cumple:'', catTmt:'', catFet:'', otros:'', creado:new Date().toISOString() };
+  openAlumnoEdit(newId);
+  // Wait until DOM updates then focus nombre
+  setTimeout(()=>document.getElementById('aluNombre').focus(), 80);
+}
+
+function saveAlumnoEdit() {
+  const a = alumnos[editingAluId]; if (!a) return;
+  const nombre = document.getElementById('aluNombre').value.trim();
+  if (!nombre) { toast('El nombre es obligatorio'); return; }
+  a.nombre = nombre;
+  a.wa     = document.getElementById('aluWA').value.trim().replace(/\D/g,'');
+  a.mail   = document.getElementById('aluMail').value.trim();
+  a.paleta = document.getElementById('aluPaleta').value.trim();
+  a.cumple = document.getElementById('aluCumple').value.trim();
+  a.catTmt = document.getElementById('aluCatTmt').value.trim();
+  a.catFet = document.getElementById('aluCatFet').value.trim();
+  a.otros  = document.getElementById('aluOtros').value.trim();
+  saveAlumnos();
+  document.getElementById('aluViewTitle').textContent = a.nombre;
+  toast('Alumno guardado');
+}
+
+function deleteAlumno() {
+  if (!editingAluId) return;
+  const nombre = alumnos[editingAluId]?.nombre || 'este alumno';
+  if (!confirm('Eliminar a ' + nombre + '?')) return;
+  delete alumnos[editingAluId];
+  saveAlumnos();
+  showAluList();
+  toast('Alumno eliminado');
+}
+
+function aluBack() {
+  if (editingAluId) {
+    // if new and empty, discard
+    const a = alumnos[editingAluId];
+    if (a && !a.nombre) { delete alumnos[editingAluId]; saveAlumnos(); }
+    showAluList();
+  } else {
+    ir('home');
+  }
 }
 
 // ── LOGOUT ────────────────────────────────────────────────────────
