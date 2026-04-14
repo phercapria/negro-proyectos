@@ -18,7 +18,8 @@
       --ocupado-bg:   #ff2d20;
       --ocupado-txt:  #ffffff;
       --libre-bg:     #2a2a2a;
-      --bloq-bg:      #1e1a0e;
+      --bloq-bg:      #080808;
+      --bloq-border:  #161616;
       --libre-hover:  #333333;
     }
     *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -195,19 +196,26 @@
       overflow:hidden;
     }
     .cal-row { display:grid; grid-template-columns:52px repeat(6,1fr); }
-    .cal-row:not(:last-child) { border-bottom:1px solid #3c3c3c; }
+    /* Borders now live on cells (not rows) so blocked cells can remove theirs */
     .time-lbl {
       font-size:.68rem; color:var(--texto-suave);
       padding:4px 6px 0 0; text-align:right;
       border-right:1px solid #3c3c3c;
+      border-bottom:1px solid #3c3c3c;
       height:52px; display:flex; align-items:flex-start; justify-content:flex-end;
       padding-top:5px;
+      box-sizing:border-box;
     }
+    .time-lbl:last-of-type { border-bottom:none; }
     .cal-cell {
       height:52px; border-right:1px solid #3c3c3c;
+      border-bottom:1px solid #3c3c3c;
       position:relative;
+      box-sizing:border-box;
     }
     .cal-cell:last-child { border-right:none; }
+    .cal-row:last-child .cal-cell,
+    .cal-row:last-child .time-lbl { border-bottom:none; }
 
     .cal-cell.libre {
       background:var(--libre-bg);
@@ -235,15 +243,25 @@
     }
 
     .cal-cell.bloqueado {
-      background:var(--bloq-bg);
-      cursor:default;
+      background-color: var(--bloq-bg);
+      background-image: repeating-linear-gradient(
+        -50deg,
+        transparent 0px,
+        transparent 7px,
+        rgba(255,255,255,.018) 7px,
+        rgba(255,255,255,.018) 8px
+      );
+      border-bottom: none;          /* merges with next blocked cell */
+      border-right-color: var(--bloq-border);
+      cursor: default;
     }
-    .cal-cell.bloqueado::after {
-      content:'Horario bloqueado';
-      position:absolute; inset:0;
-      display:flex; align-items:center; justify-content:center;
-      font-size:.6rem; color:rgba(255,180,0,.35); font-weight:600;
-      letter-spacing:.03em;
+    /* Show a single label only on the FIRST cell of each blocked group */
+    .cal-cell.bloqueado.bloq-label::after {
+      content: 'No disponible';
+      position:absolute; left:0; right:0; top:50%; transform:translateY(-50%);
+      display:block; text-align:center;
+      font-size:.56rem; color:rgba(255,255,255,.12); font-weight:600;
+      letter-spacing:.07em; text-transform:uppercase; pointer-events:none;
     }
 
     .cal-cell.ocupado {
@@ -695,6 +713,25 @@ function renderCalendario() {
   // Ocultar flecha izquierda si ya estamos en la semana actual
   const btnPrev = document.querySelector('.week-arrow.prev');
   if (btnPrev) btnPrev.style.visibility = (semanaOff <= 0) ? 'hidden' : 'visible';
+
+  // Marcar primera celda de cada grupo bloqueado para mostrar label una sola vez
+  marcarGruposBloqueados(body);
+}
+
+function marcarGruposBloqueados(calBody) {
+  const rows = calBody.querySelectorAll('.cal-row');
+  if (!rows.length) return;
+  const numCols = rows[0].querySelectorAll('.cal-cell').length;
+  for (let ci = 0; ci < numCols; ci++) {
+    let prevBloq = false;
+    rows.forEach(row => {
+      const cell = row.querySelectorAll('.cal-cell')[ci];
+      if (!cell) return;
+      const isBloq = cell.classList.contains('bloqueado');
+      if (isBloq && !prevBloq) cell.classList.add('bloq-label');
+      prevBloq = isBloq;
+    });
+  }
 }
 
 function cambiarDiasMobile(dir) {
