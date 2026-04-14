@@ -66,7 +66,7 @@
     }
     .hero-img {
       position:absolute; inset:0;
-      background: url('rodrigo.jpeg') center 15% / cover no-repeat;
+      background: url('rodrigo.jpeg') center 35% / cover no-repeat;
     }
     .hero-img::after {
       content:'';
@@ -113,7 +113,8 @@
     }
 
     /* ── SECCIÓN CALENDARIO ──────────────────────────── */
-    .cal-section { padding:32px 16px 64px; max-width:1100px; margin:0 auto; }
+    .cal-section { padding:40px 20px 64px; background:#000b09; }
+    .cal-inner-wrap { max-width:1100px; margin:0 auto; }
     .cal-top {
       display:flex; align-items:center; justify-content:space-between;
       flex-wrap:wrap; gap:12px; margin-bottom:20px;
@@ -339,7 +340,7 @@
       .site-header { padding:18px 20px; }
       .hero-headline { font-size:clamp(1.8rem,8vw,2.4rem); }
       .btn-hero { padding:14px 28px; font-size:.92rem; }
-      .cal-section { padding:20px 8px 48px; }
+      .cal-section { padding:20px 12px 48px; }
 
       /* Calendario mobile: 3 días */
       .cal-wrapper { overflow-x:visible; }
@@ -388,16 +389,6 @@
 <section class="info-strip">
   <div class="info-grid">
     <div class="info-card">
-      <div class="ic-ico">🏓</div>
-      <div class="ic-val">King Pong</div>
-      <div class="ic-lbl">Luis Viale 526 · CABA</div>
-    </div>
-    <div class="info-card">
-      <div class="ic-ico">🏓</div>
-      <div class="ic-val">Yabrudense</div>
-      <div class="ic-lbl">Alberti 1541 · CABA</div>
-    </div>
-    <div class="info-card">
       <div class="ic-ico">🕐</div>
       <div class="ic-val">Lun — Sáb</div>
       <div class="ic-lbl">9:30 a 19:30 hs</div>
@@ -407,6 +398,7 @@
 
 <!-- ── CALENDARIO ── -->
 <section class="cal-section" id="calSection">
+  <div class="cal-inner-wrap">
   <div class="cal-top">
     <h3>📅 Disponibilidad semanal</h3>
     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
@@ -445,6 +437,7 @@
       <div class="cal-body"   id="calBody"></div>
     </div>
   </div>
+  </div><!-- /.cal-inner-wrap -->
 </section>
 
 <!-- ── MODAL: POSTULARSE ── -->
@@ -462,12 +455,13 @@
       <input type="tel" id="postWA" placeholder="Ej: 1134567890 (sin 0 ni 15)" maxlength="20">
     </div>
     <div class="form-group">
-      <label>Sede preferida</label>
-      <select id="postSede">
-        <option value="King Pong (Luis Viale 526)">King Pong — Luis Viale 526</option>
-        <option value="Yabrudense (Alberti 1541)">Yabrudense — Alberti 1541</option>
-        <option value="Sin preferencia">Sin preferencia / cualquiera</option>
+      <label>Sede *</label>
+      <select id="postSede" onchange="actualizarDireccion()">
+        <option value="">— Elegí una sede —</option>
+        <option value="King Pong">King Pong</option>
+        <option value="Yabrudense">Yabrudense</option>
       </select>
+      <div id="sedeDir" style="margin-top:8px;padding:10px 12px;border-radius:8px;background:var(--fondo3);border:1px solid var(--borde);font-size:.8rem;color:var(--texto-suave);display:none;"></div>
     </div>
     <div class="form-group">
       <label>Duración deseada</label>
@@ -726,6 +720,23 @@ function irHoy() {
 }
 function scrollToCalendar() {
   document.getElementById('calSection').scrollIntoView({behavior:'smooth'});
+}
+
+// ─── SEDE: MOSTRAR DIRECCIÓN ──────────────────────────────────────
+const SEDES = {
+  'King Pong':   { dir: 'Luis Viale 526, CABA', maps: 'https://maps.google.com/?q=Luis+Viale+526+CABA' },
+  'Yabrudense':  { dir: 'Alberti 1541, CABA',   maps: 'https://maps.google.com/?q=Alberti+1541+CABA'  },
+};
+function actualizarDireccion() {
+  const sel  = document.getElementById('postSede').value;
+  const box  = document.getElementById('sedeDir');
+  const sede = SEDES[sel];
+  if (sede) {
+    box.innerHTML = `📍 <strong>${sel}</strong> — ${sede.dir} &nbsp;<a href="${sede.maps}" target="_blank" style="color:var(--verde);font-size:.75rem;">Ver mapa ↗</a>`;
+    box.style.display = 'block';
+  } else {
+    box.style.display = 'none';
+  }
 }
 
 // ─── ADMIN: TOGGLE SLOT ───────────────────────────────────────────
