@@ -453,6 +453,12 @@
   </button>
   <div class="cal-inner-wrap">
   <div style="padding:12px 16px 0;"><span id="calMesLabel" style="font-size:.75rem;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:.08em;"></span></div>
+  <!-- Navegación mobile (Lun–Mié / Jue–Sáb) -->
+  <div class="mobile-day-nav" style="padding:8px 16px 0;">
+    <button class="wbtn" onclick="cambiarDiasMobile(-1)">‹</button>
+    <div class="mdlabel" id="mobileDayLabel"></div>
+    <button class="wbtn" onclick="cambiarDiasMobile(1)">›</button>
+  </div>
   <div class="cal-wrapper" id="calWrapper">
     <div class="cal-inner">
       <div class="cal-header" id="calHeader"></div>
