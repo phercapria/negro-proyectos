@@ -10,65 +10,80 @@
     body {
       font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;
       background:#000b09; color:#f0f0f0;
-      display:flex; align-items:center; justify-content:center;
       min-height:100vh; overflow:hidden;
     }
 
-    /* Fondo con imagen */
+    /* Imagen full screen */
     .bg {
       position:fixed; inset:0;
-      background:url('rodrigo.jpeg') center 25% / cover no-repeat;
+      background:url('rodrigo.jpeg') center 20% / cover no-repeat;
       z-index:0;
     }
+    /* Gradiente: oscurece el lado izquierdo en desktop, abajo en mobile */
     .bg::after {
       content:'';
       position:absolute; inset:0;
-      background:linear-gradient(to bottom, rgba(0,11,9,.45) 0%, rgba(0,11,9,.85) 55%, rgba(0,11,9,.97) 100%);
+      background:
+        linear-gradient(to right,  rgba(0,11,9,.92) 0%, rgba(0,11,9,.60) 45%, rgba(0,11,9,.0) 75%),
+        linear-gradient(to bottom, rgba(0,11,9,.10) 0%, rgba(0,11,9,.20) 100%);
     }
 
-    /* Card de login */
-    .card {
+    /* Contenedor del form: izquierda en desktop */
+    .content {
       position:relative; z-index:1;
-      width:100%; max-width:380px;
-      padding:40px 32px;
-      background:rgba(20,20,20,.85);
-      border:1px solid #2e2e2e;
-      border-radius:20px;
-      backdrop-filter:blur(12px);
-      margin:20px;
+      min-height:100vh;
+      display:flex; align-items:center;
+      padding:48px 7vw;
     }
 
-    .brand { text-align:center; margin-bottom:32px; }
-    .brand h1 { font-size:1.4rem; font-weight:700; line-height:1.15; }
+    .form-wrap { width:100%; max-width:340px; }
+
+    /* Marca */
+    .brand { margin-bottom:40px; }
+    .brand h1 {
+      font-size:clamp(2.4rem,5vw,3.2rem);
+      font-weight:700; line-height:1.05;
+    }
     .brand h1 span { color:#25d366; display:block; }
-    .brand p { font-size:.75rem; color:#888; margin-top:6px; letter-spacing:.06em; text-transform:uppercase; }
 
-    .form-group { margin-bottom:18px; }
-    .form-group label {
-      display:block; font-size:.72rem; font-weight:600;
-      text-transform:uppercase; letter-spacing:.07em;
-      color:#888; margin-bottom:7px;
+    /* Campos pill */
+    .field {
+      position:relative; margin-bottom:16px;
     }
-    .form-group input {
-      width:100%; padding:12px 14px;
-      background:#1c1c1c; border:1px solid #2e2e2e;
-      border-radius:10px; color:#f0f0f0;
-      font-size:.92rem; font-family:inherit;
+    .field input {
+      width:100%; padding:15px 52px 15px 22px;
+      background:transparent;
+      border:1.5px solid rgba(255,255,255,.55);
+      border-radius:50px;
+      color:#f0f0f0; font-size:1rem; font-weight:600;
+      font-family:inherit; text-align:left;
       transition:border-color .2s;
     }
-    .form-group input:focus { outline:none; border-color:#25d366; }
+    .field input::placeholder { color:rgba(255,255,255,.55); font-weight:600; }
+    .field input:focus { outline:none; border-color:#25d366; }
 
+    /* Ojito */
+    .eye-btn {
+      position:absolute; right:18px; top:50%; transform:translateY(-50%);
+      background:none; border:none; cursor:pointer;
+      color:rgba(255,255,255,.5); padding:4px;
+      display:flex; align-items:center;
+      transition:color .2s;
+    }
+    .eye-btn:hover { color:rgba(255,255,255,.9); }
+
+    /* Error */
     .error {
-      background:rgba(255,45,32,.12); border:1px solid rgba(255,45,32,.3);
-      border-radius:8px; padding:10px 14px;
-      font-size:.8rem; color:#ff6b63;
-      margin-bottom:16px; display:none;
+      border-radius:50px; padding:10px 20px;
+      font-size:.82rem; color:#ff6b63; font-weight:600;
+      margin-bottom:14px; display:none; text-align:center;
     }
 
+    /* Botón */
     .btn-login {
-      width:100%; padding:14px;
+      padding:15px 36px;
       background:#25d366; color:#000;
-      border:none; border-radius:12px;
+      border:none; border-radius:50px;
       font-size:1rem; font-weight:700;
       font-family:inherit; cursor:pointer;
       transition:background .2s, transform .15s;
@@ -76,60 +91,79 @@
     .btn-login:hover { background:#1ebe5b; transform:translateY(-1px); }
     .btn-login:active { transform:translateY(0); }
 
-    .back { text-align:center; margin-top:18px; }
-    .back a { font-size:.78rem; color:#888; text-decoration:none; transition:color .2s; }
-    .back a:hover { color:#f0f0f0; }
-
-    /* Usuarios (para la gestión futura) */
-    .users-section { display:none; }
+    /* ── MOBILE ─────────────────────────────────── */
+    @media(max-width:600px) {
+      .bg::after {
+        background:linear-gradient(to bottom,
+          rgba(0,11,9,.0)  0%,
+          rgba(0,11,9,.55) 45%,
+          rgba(0,11,9,.97) 65%,
+          rgba(0,11,9,1)   100%
+        );
+      }
+      .content {
+        align-items:flex-end;
+        padding:0 28px 56px;
+        min-height:100vh;
+      }
+      .form-wrap { max-width:100%; }
+      .brand { margin-bottom:32px; }
+      .brand h1 { font-size:2.8rem; }
+      .field input { text-align:center; }
+      .field input::placeholder { text-align:center; }
+      .btn-login { width:auto; min-width:180px; }
+    }
   </style>
 </head>
 <body>
 
 <div class="bg"></div>
 
-<div class="card">
-  <div class="brand">
-    <h1>Rodrigo<span>Gilabert</span></h1>
-    <p>Administración</p>
-  </div>
-
-  <form id="loginForm" onsubmit="login(event)">
-    <div class="form-group">
-      <label>Usuario</label>
-      <input type="text" id="usuario" placeholder="usuario" autocomplete="username" autofocus>
+<div class="content">
+  <div class="form-wrap">
+    <div class="brand">
+      <h1>Rodrigo<span>Gilabert</span></h1>
     </div>
-    <div class="form-group">
-      <label>Contraseña</label>
-      <input type="password" id="password" placeholder="••••••••" autocomplete="current-password">
-    </div>
-    <div class="error" id="errorMsg">Usuario o contraseña incorrectos.</div>
-    <button type="submit" class="btn-login">Ingresar</button>
-  </form>
 
-  <div class="back">
-    <a href="/">← Volver al sitio</a>
+    <form id="loginForm" onsubmit="login(event)">
+      <div class="field">
+        <input type="text" id="usuario" placeholder="Usuario" autocomplete="username" autofocus>
+      </div>
+      <div class="field">
+        <input type="password" id="password" placeholder="Password" autocomplete="current-password">
+        <button type="button" class="eye-btn" onclick="toggleEye()" id="eyeBtn" aria-label="Mostrar contraseña">
+          <!-- ojo cerrado por defecto -->
+          <svg id="eyeIcon" width="20" height="20" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+        </button>
+      </div>
+      <div class="error" id="errorMsg">Usuario o contraseña incorrectos.</div>
+      <button type="submit" class="btn-login">Ingresar</button>
+    </form>
   </div>
 </div>
 
 <script>
-// ─── USUARIOS ────────────────────────────────────────────────────
-// Usuarios almacenados en localStorage como { usuario: passwordHash }
-// Default si no hay nada configurado
-const USERS_KEY = 'rg_users';
-
-function getUsers() {
-  const stored = localStorage.getItem(USERS_KEY);
-  if (stored) return JSON.parse(stored);
-  // Defaults: tres usuarios iniciales con la misma contraseña
-  return {
-    'rodrigo':  hashSimple('rodrigo2024'),
-    'fernanda': hashSimple('rodrigo2024'),
-    'negro':    hashSimple('rodrigo2024'),
-  };
+// ─── OJO ────────────────────────────────────────────────────────
+function toggleEye() {
+  const inp  = document.getElementById('password');
+  const icon = document.getElementById('eyeIcon');
+  const show = inp.type === 'password';
+  inp.type   = show ? 'text' : 'password';
+  icon.innerHTML = show
+    ? /* ojo tachado */
+      `<path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/>
+       <path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/>
+       <line x1="1" y1="1" x2="23" y2="23"/>`
+    : /* ojo abierto */
+      `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+       <circle cx="12" cy="12" r="3"/>`;
 }
 
-// Hash simple (no criptográfico, suficiente para este uso)
+// ─── USUARIOS ───────────────────────────────────────────────────
 function hashSimple(str) {
   let h = 0;
   for (let i = 0; i < str.length; i++) {
@@ -138,20 +172,25 @@ function hashSimple(str) {
   return h.toString(36);
 }
 
+function getUsers() {
+  const stored = localStorage.getItem('rg_users');
+  if (stored) return JSON.parse(stored);
+  return {
+    'rodrigo':  hashSimple('rodrigo2024'),
+    'fernanda': hashSimple('rodrigo2024'),
+    'negro':    hashSimple('rodrigo2024'),
+  };
+}
+
 function login(e) {
   e.preventDefault();
   const usuario  = document.getElementById('usuario').value.trim().toLowerCase();
   const password = document.getElementById('password').value;
   const users    = getUsers();
   const cfg      = JSON.parse(localStorage.getItem('rg_cfg') || '{}');
-
-  // También acepta la contraseña de admin del sistema principal
   const adminPass = cfg.password || 'rodrigo2024';
-  const validAdmin = password === adminPass;
-  const validUser  = users[usuario] && users[usuario] === hashSimple(password);
 
-  if (validUser || validAdmin) {
-    // Guardar sesión
+  if ((users[usuario] && users[usuario] === hashSimple(password)) || password === adminPass) {
     sessionStorage.setItem('rg_admin_user', usuario || 'admin');
     sessionStorage.setItem('rg_admin_auth', '1');
     window.location.href = '/?admin=1';
