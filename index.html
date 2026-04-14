@@ -824,6 +824,12 @@ function enviarSolicitud() {
   if (!nombre) { toast('Por favor ingresá tu nombre'); return; }
   if (!waNum || waNum.length < 8) { toast('Por favor ingresá tu número de WhatsApp'); return; }
 
+  // Guardar en pendientes → slot queda amarillo
+  const sk = slotKey(slotSel.fecha, slotSel.slot);
+  pendientes[sk] = { nombre, wa: waNum, sede, nivel, nota, fecha: slotSel.fecha, slot: slotSel.slot, dia: slotSel.diaIdx };
+  guardarPen();
+  renderCalendario();
+
   const horaIni  = slotAHora(slotSel.slot);
   const horaFin  = slotAHora(slotSel.slot + 1); // 1 slot = 1 hora
   const fechaStr = slotSel.fecha_obj.toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'});

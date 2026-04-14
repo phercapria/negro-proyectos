@@ -771,15 +771,35 @@ function renderSolicitudes() {
   }).join('');
 }
 
+function waConfirm(p, tipo) {
+  if (!p.wa) return;
+  const fechaObj = p.fecha ? new Date(p.fecha+'T12:00:00') : null;
+  const fechaFmt = fechaObj
+    ? fechaObj.toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'}).replace(/^\w/,c=>c.toUpperCase())
+    : p.fecha||'';
+  const horaStr = hora(p.slot);
+  const sedeStr = p.sede || 'la sede';
+  const DIAS_ES = ['lunes','martes','miercoles','jueves','viernes','sabados'];
+  let msg;
+  if (tipo==='fijo') {
+    msg = `Hola ${p.nombre}, tu solicitud de clase fija los ${DIAS_ES[p.dia]||''} a las ${horaStr} hs quedo confirmada. Nos vemos en ${sedeStr}.`;
+  } else {
+    msg = `Hola ${p.nombre}, tu clase del ${fechaFmt} a las ${horaStr} hs quedo confirmada. Nos vemos en ${sedeStr}.`;
+  }
+  window.open('https://wa.me/54'+p.wa+'?text='+encodeURIComponent(msg),'_blank');
+}
+
 function aprobar(key) {
   const p=pendientes[key]; if(!p)return;
-  ocupados[key]={nombre:p.nombre}; delete pendientes[key];
+  ocupados[key]={nombre:p.nombre,sede:p.sede}; delete pendientes[key];
   saveOcu(); savePen(); renderSolicitudes(); renderHome(); toast('Clase confirmada');
+  waConfirm(p, 'puntual');
 }
 function aprobarFijo(key) {
   const p=pendientes[key]; if(!p)return;
-  fijos[p.dia+'_'+p.slot]={nombre:p.nombre}; delete pendientes[key];
+  fijos[p.dia+'_'+p.slot]={nombre:p.nombre,sede:p.sede}; delete pendientes[key];
   saveFij(); savePen(); renderSolicitudes(); renderHome(); toast('Alumno fijo registrado');
+  waConfirm(p, 'fijo');
 }
 function rechazar(key) {
   delete pendientes[key]; savePen(); renderSolicitudes(); renderHome(); toast('Solicitud rechazada');
