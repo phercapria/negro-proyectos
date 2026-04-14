@@ -384,22 +384,22 @@
 
 
     /* ── RESPONSIVE ──────────────────────────────────── */
-    @media(max-width:600px) {
+    @media(max-width:767px) {
       .site-header { padding:18px 20px; }
       .hero-headline { font-size:clamp(1.8rem,8vw,2.4rem); }
       .btn-hero { padding:14px 28px; font-size:.92rem; }
       .cal-section { padding:20px 0 48px; }
-      .cal-outer { padding:0 40px; }
-      .week-arrow { width:36px; height:36px; }
-      .week-arrow svg { width:16px; height:28px; }
+      .cal-outer { padding:0 36px; }
+      .week-arrow { width:34px; height:34px; }
+      .week-arrow svg { width:14px; height:26px; }
 
       /* Calendario mobile: 3 días */
       .cal-wrapper { overflow-x:visible; }
       .cal-inner   { min-width:0; }
-      .cal-header  { grid-template-columns:40px repeat(3,1fr); }
-      .cal-row     { grid-template-columns:40px repeat(3,1fr); }
-      .cal-cell    { height:40px; }
-      .time-lbl    { height:40px; font-size:.62rem; }
+      .cal-header  { grid-template-columns:38px repeat(3,1fr); }
+      .cal-row     { grid-template-columns:38px repeat(3,1fr); }
+      .cal-cell    { height:44px; }
+      .time-lbl    { height:44px; font-size:.6rem; }
       .cal-day-hdr { padding:8px 4px; }
       .cal-day-hdr .dname { font-size:.6rem; }
       .cal-day-hdr .dnum  { font-size:1rem; }
@@ -590,7 +590,7 @@ function esBloqueado(di, s) {
   return !franjas[di + '_' + s];
 }
 let mobileDayStart = 0; // 0 = Lun-Mié, 3 = Jue-Sáb
-function esMobile() { return window.innerWidth <= 600; }
+function esMobile() { return window.innerWidth < 768; }
 
 const SIEMPRE_OCUPADO = [];
 let semanaOff = 0;
@@ -761,12 +761,22 @@ function dibujarLineaActual(fechas) {
   const pct  = (minTot - MIN_INI) / (MIN_FIN - MIN_INI);
   const body = document.getElementById('calBody');
   const h    = body.scrollHeight;
+  if (!h) return; // no hay layout todavía
 
+  const mobile   = esMobile();
+  const numCols  = mobile ? 3 : 6;
+  const timeLblW = mobile ? 38 : 52;
+  // En mobile, verificar si el día actual es visible (0-2 o 3-5)
+  if (mobile) {
+    const visibleStart = mobileDayStart; // 0 o 3
+    if (diaIdx < visibleStart || diaIdx >= visibleStart + 3) return; // día fuera de vista
+  }
+  const localIdx = mobile ? (diaIdx - mobileDayStart) : diaIdx;
   const line = document.createElement('div');
   line.className   = 'now-line';
   line.style.top   = `${pct * h}px`;
-  const cellW      = (body.clientWidth - 52) / 6;
-  line.style.left  = `${52 + diaIdx * cellW}px`;
+  const cellW      = (body.clientWidth - timeLblW) / numCols;
+  line.style.left  = `${timeLblW + localIdx * cellW}px`;
   line.style.width = `${cellW}px`;
   body.style.position = 'relative';
   body.appendChild(line);
