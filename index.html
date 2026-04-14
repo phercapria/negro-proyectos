@@ -783,13 +783,18 @@ function renderCalendario() {
 
   // Línea hora actual
   if (semanaOff === 0) dibujarLineaActual(todasFechas);
+
+  // Ocultar flecha izquierda si ya estamos en la semana actual
+  const btnPrev = document.querySelector('.week-arrow.prev');
+  if (btnPrev) btnPrev.style.visibility = (semanaOff <= 0) ? 'hidden' : 'visible';
 }
 
 function cambiarDiasMobile(dir) {
   if (dir > 0 && mobileDayStart === 0) { mobileDayStart = 3; renderCalendario(); }
   else if (dir > 0 && mobileDayStart === 3) { semanaOff++; mobileDayStart = 0; renderCalendario(); }
   else if (dir < 0 && mobileDayStart === 3) { mobileDayStart = 0; renderCalendario(); }
-  else if (dir < 0 && mobileDayStart === 0) { semanaOff--; mobileDayStart = 3; renderCalendario(); }
+  else if (dir < 0 && mobileDayStart === 0 && semanaOff > 0) { semanaOff--; mobileDayStart = 3; renderCalendario(); }
+  // si semanaOff === 0 y mobileDayStart === 0: ya estamos al inicio, no retroceder
 }
 
 function dibujarLineaActual(fechas) {
@@ -816,7 +821,11 @@ function dibujarLineaActual(fechas) {
 }
 
 // ─── NAVEGACIÓN ───────────────────────────────────────────────────
-function cambiarSemana(d) { semanaOff += d; renderCalendario(); }
+function cambiarSemana(d) {
+  if (d < 0 && semanaOff <= 0) return; // no retroceder antes de la semana actual
+  semanaOff += d;
+  renderCalendario();
+}
 function irHoy() {
   semanaOff = 0; renderCalendario();
   document.getElementById('calSection').scrollIntoView({behavior:'smooth'});
