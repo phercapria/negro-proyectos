@@ -651,7 +651,8 @@ function renderCalendario() {
     const labels = mobileDayStart === 0
       ? `${fmt(todasFechas[0])} – ${fmt(todasFechas[2])}`
       : `${fmt(todasFechas[3])} – ${fmt(todasFechas[5])}`;
-    document.getElementById('mobileDayLabel').textContent = labels;
+    const mbl = document.getElementById('mobileDayLabel');
+    if (mbl) mbl.textContent = labels;
   }
 
   // Nombre del mes (o dos meses si la semana cruza)

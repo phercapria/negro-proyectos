@@ -388,6 +388,22 @@
       </div>
     </div>
 
+    <!-- Sincronizar datos -->
+    <div class="home-card" style="--card-accent:#f0a500;grid-column:1/-1;" onclick="ir('sync')">
+      <div style="display:flex;align-items:center;gap:14px;">
+        <div class="card-icon" style="background:rgba(240,165,0,.12);flex-shrink:0;">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#f0a500" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="1 4 1 10 7 10"/><polyline points="23 20 23 14 17 14"/>
+            <path d="M20.49 9A9 9 0 005.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 013.51 15"/>
+          </svg>
+        </div>
+        <div>
+          <h3 style="font-size:.97rem;font-weight:700;margin-bottom:3px;">Sincronizar datos entre dispositivos</h3>
+          <p style="font-size:.74rem;color:var(--suave);line-height:1.5;">Exportá todos los datos (alumnos + clases) e importalos en otro celular o computadora.</p>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -575,6 +591,42 @@
       <button class="btn-del-alu" id="btnDelAlu" onclick="deleteAlumno()">Eliminar</button>
     </div>
     <p id="aluUpdatedLbl" style="font-size:.7rem;color:#444;text-align:center;margin-top:16px;"></p>
+  </div>
+</div>
+
+<!-- ── SINCRONIZAR ── -->
+<div class="view" id="viewSync">
+  <div class="view-hdr"><button class="btn-back" onclick="ir('home')">‹</button><h2>Sincronizar datos</h2></div>
+  <div class="sb">
+    <div class="lbl" style="margin-bottom:14px;">¿Por qué los datos difieren entre dispositivos?</div>
+    <p style="font-size:.83rem;color:var(--suave);line-height:1.65;margin-bottom:18px;">Cada navegador y dispositivo guarda los datos en su propia memoria local. Para unificarlos, exportá desde el dispositivo que tiene los datos más completos e importá en el otro.</p>
+
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <!-- EXPORTAR -->
+      <button onclick="exportarDatos()" style="display:flex;align-items:center;gap:14px;padding:18px;background:rgba(37,211,102,.08);border:1.5px solid rgba(37,211,102,.3);border-radius:14px;color:var(--texto);cursor:pointer;font-family:inherit;text-align:left;transition:border-color .2s;" onmouseover="this.style.borderColor='var(--verde)'" onmouseout="this.style.borderColor='rgba(37,211,102,.3)'">
+        <div style="width:44px;height:44px;border-radius:12px;background:rgba(37,211,102,.13);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#25d366" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        </div>
+        <div>
+          <div style="font-size:.93rem;font-weight:700;margin-bottom:3px;">Exportar todos los datos</div>
+          <div style="font-size:.76rem;color:var(--suave);">Descarga un archivo .json con alumnos, clases y configuración.</div>
+        </div>
+      </button>
+
+      <!-- IMPORTAR -->
+      <label style="display:flex;align-items:center;gap:14px;padding:18px;background:rgba(91,154,245,.08);border:1.5px solid rgba(91,154,245,.3);border-radius:14px;color:var(--texto);cursor:pointer;font-family:inherit;transition:border-color .2s;" onmouseover="this.style.borderColor='#5b9af5'" onmouseout="this.style.borderColor='rgba(91,154,245,.3)'">
+        <input type="file" accept=".json" style="display:none" onchange="importarDatos(event)">
+        <div style="width:44px;height:44px;border-radius:12px;background:rgba(91,154,245,.13);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#5b9af5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        </div>
+        <div>
+          <div style="font-size:.93rem;font-weight:700;margin-bottom:3px;">Importar datos</div>
+          <div style="font-size:.76rem;color:var(--suave);">Cargá el archivo .json exportado desde el otro dispositivo. <strong style="color:#ff8a80;">Reemplaza los datos actuales.</strong></div>
+        </div>
+      </label>
+    </div>
+
+    <div id="syncMsg" style="display:none;margin-top:16px;padding:12px 16px;border-radius:10px;font-size:.82rem;font-weight:600;"></div>
   </div>
 </div>
 
@@ -1473,6 +1525,65 @@ function actualizarDatos() {
   renderCalendario();
   renderHome();
   toast('Actualizado');
+}
+
+// ── EXPORTAR / IMPORTAR DATOS ────────────────────────────────────
+function exportarDatos() {
+  const payload = {
+    version: 1,
+    fecha: new Date().toISOString(),
+    rg_ocu:    localStorage.getItem('rg_ocu')    || '{}',
+    rg_pen:    localStorage.getItem('rg_pen')    || '{}',
+    rg_fij:    localStorage.getItem('rg_fij')    || '{}',
+    rg_cfg:    localStorage.getItem('rg_cfg')    || '{}',
+    rg_franjas:localStorage.getItem('rg_franjas')|| '{}',
+    rg_alumnos:localStorage.getItem('rg_alumnos')|| '{}',
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type:'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  const ts   = new Date().toISOString().slice(0,10);
+  a.href = url; a.download = `rodrigo-datos-${ts}.json`;
+  a.click(); URL.revokeObjectURL(url);
+  toast('Datos exportados');
+}
+
+function importarDatos(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.rg_alumnos && !data.rg_ocu) throw new Error('Archivo inválido');
+      const keys = ['rg_ocu','rg_pen','rg_fij','rg_cfg','rg_franjas','rg_alumnos'];
+      keys.forEach(k => { if (data[k]) localStorage.setItem(k, data[k]); });
+      // Recargar variables en memoria
+      alumnos    = JSON.parse(localStorage.getItem('rg_alumnos') || '{}');
+      ocupados   = JSON.parse(localStorage.getItem('rg_ocu')     || '{}');
+      pendientes = JSON.parse(localStorage.getItem('rg_pen')     || '{}');
+      fijos      = JSON.parse(localStorage.getItem('rg_fij')     || '{}');
+      franjas    = JSON.parse(localStorage.getItem('rg_franjas') || '{}');
+      renderHome(); renderCalendario();
+      const msg = document.getElementById('syncMsg');
+      msg.style.display = 'block';
+      msg.style.background = 'rgba(37,211,102,.1)';
+      msg.style.border = '1px solid rgba(37,211,102,.3)';
+      msg.style.color = 'var(--verde)';
+      const aCount = Object.keys(alumnos).length;
+      msg.textContent = `✓ Importación exitosa — ${aCount} alumno${aCount!==1?'s':''} cargado${aCount!==1?'s':''}.`;
+      toast('Datos importados correctamente');
+    } catch(err) {
+      const msg = document.getElementById('syncMsg');
+      msg.style.display = 'block';
+      msg.style.background = 'rgba(255,45,32,.1)';
+      msg.style.border = '1px solid rgba(255,45,32,.3)';
+      msg.style.color = '#ff6b60';
+      msg.textContent = '✗ Error al importar. Asegurate de usar un archivo exportado desde este panel.';
+    }
+    event.target.value = ''; // reset input
+  };
+  reader.readAsText(file);
 }
 
 function toggleDiasCustom(radio) {
