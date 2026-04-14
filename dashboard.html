@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel Admin — Rodrigo Gilabert</title>
+  <style>
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    html, body { height:100%; }
+    body { font-family:'Helvetica Neue', Helvetica, Arial, sans-serif; background:#000b09; color:#f0f0f0; min-height:100vh; }
+    :root {
+      --verde:#25d366; --verde-osc:#1ebe5b;
+      --fondo:#000b09; --fondo2:#0d1412; --fondo3:#1a1a1a;
+      --borde:#2a2a2a; --texto:#f0f0f0; --suave:#888;
+      --rojo:#ff2d20; --amarillo:rgba(255,180,0,.85); --azul:#5b9af5;
+    }
+    .hidden { display:none !important; }
+
+    /* ── HEADER ── */
+    .header { display:flex; align-items:center; justify-content:space-between; padding:14px 20px; background:var(--fondo2); border-bottom:1px solid var(--borde); position:sticky; top:0; z-index:100; }
+    .header-logo { font-weight:700; font-size:.95rem; }
+    .header-logo span { color:var(--verde); }
+    .user-chip { font-size:.75rem; color:var(--suave); }
+    .btn-logout { background:none; border:1px solid #333; border-radius:20px; color:#aaa; font-size:.75rem; padding:5px 14px; cursor:pointer; }
+
+    /* ── VIEWS ── */
+    .view { display:none; padding-bottom:80px; }
+    .view.active { display:block; }
+    .view-hdr { display:flex; align-items:center; gap:10px; padding:14px 20px; border-bottom:1px solid var(--borde); position:sticky; top:57px; background:var(--fondo); z-index:50; }
+    .btn-back { background:none; border:none; color:var(--verde); font-size:1.5rem; line-height:1; cursor:pointer; padding:0 2px; }
+    .view-hdr h2 { font-size:1rem; font-weight:700; }
+
+    /* ── HOME ── */
+    .home-top { padding:28px 20px 4px; }
+    .home-top h1 { font-size:1.5rem; font-weight:700; }
+    .home-top h1 span { color:var(--verde); }
+    .home-top p { color:var(--suave); font-size:.85rem; margin-top:4px; }
+    .home-cards { display:flex; flex-direction:column; gap:12px; padding:20px; }
+    .home-card { background:var(--fondo2); border:1.5px solid var(--borde); border-radius:16px; padding:20px 18px; display:flex; align-items:center; gap:14px; cursor:pointer; transition:border-color .2s, background .2s; }
+    @media(hover:hover){ .home-card:hover { background:#0d1f18; border-color:var(--verde); } }
+    .home-card:active { background:#0d1f18; border-color:var(--verde); }
+    .card-icon { width:48px; height:48px; border-radius:13px; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
+    .card-icon.c1 { background:rgba(37,211,102,.15); }
+    .card-icon.c2 { background:rgba(91,154,245,.12); }
+    .card-icon.c3 { background:rgba(255,255,255,.06); }
+    .card-icon.c4 { background:rgba(255,180,0,.12); }
+    .card-icon.c5 { background:rgba(255,45,32,.12); }
+    .card-text h3 { font-size:.93rem; font-weight:700; margin-bottom:3px; }
+    .card-text p  { font-size:.77rem; color:var(--suave); line-height:1.4; }
+    .card-badge { margin-left:auto; background:var(--rojo); color:#fff; font-size:.68rem; font-weight:700; border-radius:20px; padding:2px 9px; flex-shrink:0; }
+
+    /* ── SHARED BLOCKS ── */
+    .sb { padding:18px 20px; }
+    .sb + .sb { border-top:1px solid var(--borde); }
+    .lbl { font-size:.67rem; font-weight:700; color:var(--suave); text-transform:uppercase; letter-spacing:.07em; margin-bottom:10px; }
+
+    /* Date chips */
+    .date-chips { display:flex; gap:8px; overflow-x:auto; padding-bottom:4px; scrollbar-width:none; }
+    .date-chips::-webkit-scrollbar { display:none; }
+    .dchip { flex-shrink:0; display:flex; flex-direction:column; align-items:center; padding:10px 13px; border-radius:12px; min-width:50px; background:var(--fondo3); border:1.5px solid var(--borde); cursor:pointer; transition:all .15s; }
+    .dchip .dn { font-size:.59rem; color:var(--suave); text-transform:uppercase; font-weight:700; }
+    .dchip .dd { font-size:1rem; font-weight:700; margin-top:1px; }
+    .dchip.sel { background:var(--verde); border-color:var(--verde); color:#000; }
+    .dchip.sel .dn { color:rgba(0,0,0,.55); }
+
+    /* Time grid (cargar) */
+    .time-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+    .tbtn { padding:11px 6px; border-radius:10px; border:1.5px solid var(--borde); background:var(--fondo3); color:var(--texto); font-size:.82rem; font-weight:600; cursor:pointer; text-align:center; transition:all .12s; font-family:inherit; }
+    .tbtn:hover { border-color:var(--verde); }
+    .tbtn.sel  { background:var(--verde); border-color:var(--verde); color:#000; }
+    .tbtn.ocu  { background:rgba(255,45,32,.12); border-color:rgba(255,45,32,.3); color:#f06; cursor:default; font-size:.7rem; }
+    .tbtn.pend { background:rgba(255,180,0,.1); border-color:rgba(255,180,0,.3); color:var(--amarillo); cursor:default; font-size:.7rem; }
+    .tbtn.bloq { background:rgba(255,180,0,.06); border-color:rgba(255,180,0,.2); color:rgba(255,180,0,.5); cursor:default; font-size:.7rem; }
+
+    /* Form */
+    .tipo-row { display:flex; gap:8px; margin-bottom:16px; }
+    .tipo-btn { flex:1; padding:10px; border-radius:10px; border:1.5px solid var(--borde); background:var(--fondo3); color:var(--suave); font-size:.82rem; font-weight:600; cursor:pointer; font-family:inherit; transition:all .15s; }
+    .tipo-btn.active { border-color:var(--verde); color:var(--verde); background:rgba(37,211,102,.08); }
+    .field-group { margin-bottom:14px; }
+    .field-group label { display:block; font-size:.7rem; font-weight:700; color:var(--suave); text-transform:uppercase; letter-spacing:.06em; margin-bottom:6px; }
+    .field-group input { width:100%; padding:12px 16px; background:var(--fondo3); border:1.5px solid var(--borde); border-radius:10px; color:var(--texto); font-size:.92rem; font-family:inherit; }
+    .field-group input:focus { outline:none; border-color:var(--verde); }
+    .btn-save { width:100%; padding:15px; background:var(--verde); color:#000; border:none; border-radius:12px; font-size:.95rem; font-weight:700; font-family:inherit; cursor:pointer; transition:background .2s; }
+    .btn-save:hover { background:var(--verde-osc); }
+    .btn-save:disabled { background:#222; color:#555; cursor:not-allowed; }
+
+    /* ── CALENDARIO ── */
+    .cal-tabs { display:flex; gap:8px; padding:14px 20px; border-bottom:1px solid var(--borde); }
+    .ctab { padding:8px 18px; border-radius:20px; border:1.5px solid var(--borde); background:transparent; color:var(--suave); font-size:.82rem; font-weight:600; cursor:pointer; font-family:inherit; transition:all .15s; }
+    .ctab.active { background:var(--verde); border-color:var(--verde); color:#000; }
+    .dnav { display:flex; align-items:center; justify-content:space-between; padding:10px 20px; border-bottom:1px solid var(--borde); }
+    .dnav .dlabel { font-size:.92rem; font-weight:700; }
+    .btn-nav { background:none; border:none; color:var(--verde); font-size:1.4rem; cursor:pointer; padding:4px 10px; line-height:1; }
+    .day-slots { padding:10px 20px; display:flex; flex-direction:column; gap:5px; }
+    .dslot { display:flex; align-items:center; gap:10px; padding:11px 14px; border-radius:10px; border:1px solid var(--borde); background:var(--fondo3); cursor:pointer; transition:border-color .12s; }
+    .dslot .hora { font-size:.85rem; font-weight:700; width:50px; flex-shrink:0; }
+    .dslot .estado { font-size:.78rem; font-weight:600; color:var(--suave); }
+    .dslot.libre:hover { border-color:var(--verde); }
+    .dslot.libre:hover .estado { color:var(--verde); }
+    .dslot.ocu  { background:rgba(255,45,32,.1);  border-color:rgba(255,45,32,.35); }
+    .dslot.ocu  .estado { color:#ff6b60; }
+    .dslot.fijo { background:rgba(255,45,32,.15); border-color:rgba(255,45,32,.45); }
+    .dslot.fijo .estado { color:#ff8a80; }
+    .dslot.pend { background:rgba(255,180,0,.08); border-color:rgba(255,180,0,.3); }
+    .dslot.pend .estado { color:var(--amarillo); }
+    .dslot.bloq { background:rgba(255,180,0,.05); border-color:rgba(255,180,0,.15); cursor:default; }
+    .dslot.bloq .estado { color:rgba(255,180,0,.45); }
+    .dslot-del { margin-left:auto; background:none; border:none; color:#555; font-size:1rem; cursor:pointer; padding:2px 6px; border-radius:6px; transition:color .15s; }
+    .dslot-del:hover { color:var(--rojo); }
+    .week-scroll { overflow-x:auto; }
+    .week-inner { min-width:580px; padding:8px 12px 0; }
+    .wk-hdr { display:grid; grid-template-columns:44px repeat(6,1fr); margin-bottom:2px; }
+    .wk-day { text-align:center; font-size:.68rem; font-weight:700; color:var(--suave); padding:6px 2px; }
+    .wk-day.today { color:var(--verde); }
+    .wk-row { display:grid; grid-template-columns:44px repeat(6,1fr); border-bottom:1px solid #191919; }
+    .wk-time { font-size:.6rem; color:#555; padding:6px 4px 0; text-align:right; }
+    .wk-cell { height:34px; border-left:1px solid #191919; cursor:pointer; background:#111; transition:background .1s; }
+    .wk-cell:hover { background:#1a1a1a; }
+    .wk-cell.ocu  { background:rgba(255,45,32,.22); }
+    .wk-cell.fijo { background:rgba(255,45,32,.32); }
+    .wk-cell.pend { background:rgba(255,180,0,.14); }
+    .wk-cell.bloq { background:rgba(255,180,0,.07); cursor:default; }
+    .month-grid-wrap { padding:0 14px 20px; }
+    .month-hdr { display:grid; grid-template-columns:repeat(7,1fr); margin-bottom:4px; }
+    .month-dname { text-align:center; font-size:.62rem; color:var(--suave); font-weight:700; padding:4px 0; }
+    .month-body { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; }
+    .mcell { aspect-ratio:1; border-radius:8px; background:#0e0e0e; display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:.8rem; font-weight:600; cursor:pointer; position:relative; transition:background .12s; }
+    .mcell:hover:not(.dom):not(.otro) { background:#1a1a1a; }
+    .mcell.today { border:2px solid var(--verde); }
+    .mcell.otro { opacity:.25; cursor:default; }
+    .mcell.dom  { opacity:.18; cursor:default; }
+    .mcell.hiOcu  { background:rgba(255,45,32,.16); }
+    .mcell.midOcu { background:rgba(255,180,0,.1); }
+    .mcell .mdot { position:absolute; bottom:3px; width:5px; height:5px; border-radius:50%; }
+
+    /* ── FRANJAS ── */
+    .day-tabs { display:flex; gap:6px; padding:14px 20px; overflow-x:auto; border-bottom:1px solid var(--borde); scrollbar-width:none; }
+    .day-tabs::-webkit-scrollbar { display:none; }
+    .dtab { flex-shrink:0; padding:8px 16px; border-radius:20px; border:1.5px solid var(--borde); background:transparent; color:var(--suave); font-size:.82rem; font-weight:600; cursor:pointer; font-family:inherit; transition:all .15s; }
+    .dtab.active { background:var(--amarillo); border-color:rgba(255,180,0,.7); color:#000; }
+    .franjas-presets { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
+    .fpre { padding:7px 14px; border-radius:20px; border:1px solid var(--borde); background:var(--fondo3); color:var(--suave); font-size:.75rem; font-weight:600; cursor:pointer; font-family:inherit; transition:all .15s; }
+    .fpre:hover { border-color:var(--amarillo); color:var(--amarillo); }
+    .franja-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:20px; }
+    .fbtn { padding:12px 6px; border-radius:10px; border:1.5px solid var(--borde); background:var(--fondo3); color:#666; font-size:.82rem; font-weight:600; cursor:pointer; text-align:center; transition:all .12s; font-family:inherit; }
+    .fbtn.on { background:rgba(255,180,0,.15); border-color:rgba(255,180,0,.6); color:var(--amarillo); }
+    .franja-apply { display:flex; gap:8px; }
+    .btn-apply { flex:1; padding:12px; border-radius:10px; border:1.5px solid var(--borde); background:var(--fondo3); color:var(--suave); font-size:.8rem; font-weight:700; cursor:pointer; font-family:inherit; transition:all .15s; text-align:center; }
+    .btn-apply.primary { background:var(--amarillo); border-color:rgba(255,180,0,.7); color:#000; }
+    .btn-apply:hover:not(.primary) { border-color:var(--amarillo); color:var(--amarillo); }
+    .franja-status { margin-top:14px; padding:10px 14px; border-radius:10px; background:rgba(255,180,0,.07); border:1px solid rgba(255,180,0,.2); font-size:.78rem; color:rgba(255,180,0,.8); }
+
+    /* ── SOLICITUDES ── */
+    .soli-list { padding:14px 20px; display:flex; flex-direction:column; gap:12px; }
+    .soli-card { background:var(--fondo2); border:1px solid var(--borde); border-radius:12px; padding:16px; }
+    .soli-name { font-size:.92rem; font-weight:700; color:var(--verde); margin-bottom:6px; }
+    .soli-detail { font-size:.8rem; color:var(--suave); line-height:1.7; }
+    .soli-detail strong { color:var(--texto); }
+    .soli-actions { display:flex; gap:8px; margin-top:12px; flex-wrap:wrap; }
+    .btn-ok  { flex:1; padding:10px; border-radius:8px; border:none; background:var(--verde); color:#000; font-size:.8rem; font-weight:700; cursor:pointer; font-family:inherit; min-width:80px; }
+    .btn-ok2 { flex:1; padding:10px; border-radius:8px; border:1px solid rgba(37,211,102,.3); background:rgba(37,211,102,.08); color:var(--verde); font-size:.75rem; font-weight:700; cursor:pointer; font-family:inherit; min-width:80px; }
+    .btn-no  { flex:1; padding:10px; border-radius:8px; border:1px solid rgba(255,45,32,.3); background:rgba(255,45,32,.1); color:#ff6b60; font-size:.8rem; font-weight:700; cursor:pointer; font-family:inherit; min-width:80px; }
+    .empty { text-align:center; padding:56px 20px; color:var(--suave); font-size:.9rem; }
+
+    /* ── BOTTOM NAV ── */
+    .bottom-nav { position:fixed; bottom:0; left:0; right:0; background:var(--fondo2); border-top:1px solid var(--borde); display:flex; padding:8px 0 max(8px, env(safe-area-inset-bottom)); z-index:200; }
+    .bnav-btn { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; background:none; border:none; color:var(--suave); font-size:.58rem; font-weight:700; cursor:pointer; padding:4px 0; transition:color .15s; position:relative; }
+    .bnav-btn svg { display:block; }
+    .bnav-btn.active { color:var(--verde); }
+    .bnav-badge { position:absolute; top:0; right:calc(50% - 16px); background:var(--rojo); color:#fff; font-size:.55rem; font-weight:700; border-radius:10px; padding:1px 5px; }
+
+    /* ── TOAST ── */
+    .toast { position:fixed; bottom:80px; left:50%; transform:translateX(-50%); background:#1e1e1e; border:1px solid #333; border-radius:30px; padding:10px 22px; font-size:.82rem; font-weight:600; white-space:nowrap; z-index:999; pointer-events:none; opacity:0; transition:opacity .2s; }
+    .toast.show { opacity:1; }
+
+    @media(min-width:640px) {
+      .home-cards { flex-direction:row; flex-wrap:wrap; }
+      .home-card { flex:1 1 calc(50% - 6px); }
+      .franja-grid { grid-template-columns:repeat(5,1fr); }
+    }
+  </style>
+</head>
+<body>
+<div id="toast" class="toast"></div>
+
+<header class="header">
+  <div class="header-logo">Rodrigo <span>Gilabert</span></div>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <span class="user-chip" id="userChip"></span>
+    <button class="btn-logout" onclick="logout()">Salir</button>
+  </div>
+</header>
+
+<!-- ── HOME ── -->
+<div class="view active" id="viewHome">
+  <div class="home-top">
+    <h1>Hola, <span id="greetName">Rodrigo</span></h1>
+    <p>Panel de administracion</p>
+  </div>
+  <div class="home-cards">
+    <div class="home-card" onclick="ir('cargar')">
+      <div class="card-icon c1"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg></div>
+      <div class="card-text"><h3>Cargar clase</h3><p>Marcar un horario como ocupado, puntual o fijo.</p></div>
+    </div>
+    <div class="home-card" onclick="ir('calendario')">
+      <div class="card-icon c2"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+      <div class="card-text"><h3>Ver calendario</h3><p>Vista por dia, semana o mes.</p></div>
+    </div>
+    <div class="home-card" onclick="ir('franjas')">
+      <div class="card-icon c4"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="4" rx="1"/><rect x="3" y="10" width="10" height="4" rx="1"/><rect x="3" y="17" width="14" height="4" rx="1"/></svg></div>
+      <div class="card-text"><h3>Franjas horarias</h3><p>Definir cuando estas disponible por dia.</p></div>
+    </div>
+    <div class="home-card" onclick="window.open('/','_blank')">
+      <div class="card-icon c3"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div>
+      <div class="card-text"><h3>Ver sitio como usuario</h3><p>Como lo ven tus alumnos.</p></div>
+    </div>
+    <div class="home-card" id="cardSoli" onclick="ir('solicitudes')">
+      <div class="card-icon c5"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
+      <div class="card-text"><h3>Solicitudes</h3><p>Confirmar o rechazar pedidos de alumnos.</p></div>
+      <span class="card-badge hidden" id="homeBadge">0</span>
+    </div>
+  </div>
+</div>
+
+<!-- ── CARGAR CLASE ── -->
+<div class="view" id="viewCargar">
+  <div class="view-hdr"><button class="btn-back" onclick="ir('home')">‹</button><h2>Cargar clase</h2></div>
+  <div class="sb">
+    <div class="lbl">Fecha</div>
+    <div class="date-chips" id="dateChips"></div>
+  </div>
+  <div class="sb hidden" id="secSlot">
+    <div class="lbl">Horario</div>
+    <div class="time-grid" id="timeGrid"></div>
+  </div>
+  <div class="sb hidden" id="secNombre">
+    <div class="lbl">Tipo de clase</div>
+    <div class="tipo-row">
+      <button class="tipo-btn active" id="tipoPunt" onclick="setTipo('puntual')">Clase puntual</button>
+      <button class="tipo-btn" id="tipoFij" onclick="setTipo('fijo')">Alumno fijo</button>
+    </div>
+    <div class="field-group">
+      <label>Nombre del alumno (opcional)</label>
+      <input type="text" id="inpNombre" placeholder="Ej: Juan Garcia" maxlength="40">
+    </div>
+    <button class="btn-save" onclick="guardarClase()">Guardar</button>
+  </div>
+</div>
+
+<!-- ── CALENDARIO ── -->
+<div class="view" id="viewCalendario">
+  <div class="view-hdr"><button class="btn-back" onclick="ir('home')">‹</button><h2>Calendario</h2></div>
+  <div class="cal-tabs">
+    <button class="ctab active" onclick="setTab('dia',this)">Dia</button>
+    <button class="ctab" onclick="setTab('semana',this)">Semana</button>
+    <button class="ctab" onclick="setTab('mes',this)">Mes</button>
+  </div>
+  <div id="tabDia">
+    <div class="dnav"><button class="btn-nav" id="btnDiaPrev" onclick="cambiarDia(-1)">‹</button><div class="dlabel" id="diaLabel"></div><button class="btn-nav" onclick="cambiarDia(1)">›</button></div>
+    <div class="day-slots" id="daySlots"></div>
+  </div>
+  <div id="tabSemana" class="hidden">
+    <div class="dnav"><button class="btn-nav" id="btnSemPrev" onclick="cambiarSem(-1)">‹</button><div class="dlabel" id="semLabel"></div><button class="btn-nav" onclick="cambiarSem(1)">›</button></div>
+    <div class="week-scroll"><div class="week-inner"><div class="wk-hdr" id="wkHdr"></div><div id="wkBody"></div></div></div>
+  </div>
+  <div id="tabMes" class="hidden">
+    <div class="dnav"><button class="btn-nav" onclick="cambiarMes(-1)">‹</button><div class="dlabel" id="mesLabel"></div><button class="btn-nav" onclick="cambiarMes(1)">›</button></div>
+    <div class="month-grid-wrap">
+      <div class="month-hdr"><div class="month-dname">LUN</div><div class="month-dname">MAR</div><div class="month-dname">MIE</div><div class="month-dname">JUE</div><div class="month-dname">VIE</div><div class="month-dname">SAB</div><div class="month-dname" style="opacity:.3">DOM</div></div>
+      <div class="month-body" id="monthBody"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── FRANJAS HORARIAS ── -->
+<div class="view" id="viewFranjas">
+  <div class="view-hdr"><button class="btn-back" onclick="ir('home')">‹</button><h2>Franjas horarias</h2></div>
+  <div class="sb" style="padding-bottom:10px;">
+    <p style="font-size:.82rem;color:var(--suave);line-height:1.5;">Selecciona los horarios en los que <strong style="color:var(--texto)">estas disponible</strong> cada dia. Los demas aparecen como <span style="color:rgba(255,180,0,.7)">bloqueados</span> para los alumnos.</p>
+  </div>
+  <div class="day-tabs" id="dayTabs"></div>
+  <div class="sb">
+    <div class="lbl">Horarios habilitados — <span id="franjasDayName">Lunes</span></div>
+    <div class="franjas-presets">
+      <button class="fpre" onclick="presetFranjas('manana')">Manana (9–13)</button>
+      <button class="fpre" onclick="presetFranjas('tarde')">Tarde (15–19)</button>
+      <button class="fpre" onclick="presetFranjas('todo')">Todo el dia</button>
+      <button class="fpre" onclick="presetFranjas('ninguno')">Ninguno</button>
+    </div>
+    <div class="franja-grid" id="franjaGrid"></div>
+    <div class="franja-apply">
+      <button class="btn-apply primary" onclick="guardarFranja('dia')">Guardar este dia</button>
+      <button class="btn-apply" onclick="guardarFranja('semana')">Aplicar toda la semana</button>
+    </div>
+    <div class="franja-status hidden" id="franjaStatus"></div>
+  </div>
+</div>
+
+<!-- ── SOLICITUDES ── -->
+<div class="view" id="viewSolicitudes">
+  <div class="view-hdr"><button class="btn-back" onclick="ir('home')">‹</button><h2>Solicitudes <span id="soliBadge" class="card-badge hidden">0</span></h2></div>
+  <div class="soli-list" id="soliList"></div>
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav">
+  <button class="bnav-btn active" id="bn-home" onclick="ir('home')">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    Inicio
+  </button>
+  <button class="bnav-btn" id="bn-cargar" onclick="ir('cargar')">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+    Cargar
+  </button>
+  <button class="bnav-btn" id="bn-calendario" onclick="ir('calendario')">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    Calendario
+  </button>
+  <button class="bnav-btn" id="bn-franjas" onclick="ir('franjas')">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="4" rx="1"/><rect x="3" y="10" width="10" height="4" rx="1"/><rect x="3" y="17" width="14" height="4" rx="1"/></svg>
+    Franjas
+  </button>
+  <button class="bnav-btn" id="bn-solicitudes" onclick="ir('solicitudes')">
+    <span class="bnav-badge hidden" id="navBadge">0</span>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+    Solicitudes
+  </button>
+</nav>
+
+<script>
+// ── AUTH ──────────────────────────────────────────────────────────
+if (sessionStorage.getItem('rg_admin_auth') !== '1') { window.location.href = '/admin'; }
+const adminUser = sessionStorage.getItem('rg_admin_user') || 'admin';
+document.getElementById('userChip').textContent = adminUser;
+document.getElementById('greetName').textContent = adminUser.charAt(0).toUpperCase() + adminUser.slice(1);
+
+// ── CONSTANTES ───────────────────────────────────────────────────
+const MIN_INI = 9*60, MIN_FIN = 19*60, TOTAL_SLOTS = (MIN_FIN-MIN_INI)/30;
+const DIAS_S = ['Lun','Mar','Mie','Jue','Vie','Sab'];
+const DIAS_L = ['Lunes','Martes','Miercoles','Jueves','Viernes','Sabado'];
+const MESES  = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const SIEMPRE = [{dia:0,slot:0},{dia:5,slot:5}];
+
+// ── DATA ──────────────────────────────────────────────────────────
+let ocupados   = JSON.parse(localStorage.getItem('rg_ocu') || '{}');
+let pendientes = JSON.parse(localStorage.getItem('rg_pen') || '{}');
+let fijos      = JSON.parse(localStorage.getItem('rg_fij') || '{}');
+// rg_franjas: { 'dia_slot': true } — slots habilitados por dia de semana
+// Si un dia no tiene ninguna entrada, todos sus slots estan habilitados
+let franjas    = JSON.parse(localStorage.getItem('rg_franjas') || '{}');
+
+function saveOcu() { localStorage.setItem('rg_ocu', JSON.stringify(ocupados)); }
+function saveFij() { localStorage.setItem('rg_fij', JSON.stringify(fijos)); }
+function savePen() { localStorage.setItem('rg_pen', JSON.stringify(pendientes)); }
+function saveFranjas() { localStorage.setItem('rg_franjas', JSON.stringify(franjas)); }
+
+function fkey(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+function sk(f,s) { return `${f}_${s}`; }
+function hora(s) { const m=MIN_INI+s*30; return `${String(Math.floor(m/60)).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`; }
+function diIdx(d) { return (d.getDay()+6)%7; }
+
+function esFranjaActiva() {
+  // hay franjas definidas si al menos un slot esta marcado
+  return Object.keys(franjas).length > 0;
+}
+function esBloqueado(di, s) {
+  if (!esFranjaActiva()) return false;
+  // si hay al menos un slot habilitado para este dia, verificar si este esta habilitado
+  const tieneAlgunoDia = Object.keys(franjas).some(k => parseInt(k.split('_')[0]) === di);
+  if (!tieneAlgunoDia) return false; // dia sin configuracion = todos habilitados
+  return !franjas[di + '_' + s];
+}
+function esOcupado(fk,s,di) { return !!ocupados[sk(fk,s)] || !!fijos[di+'_'+s] || SIEMPRE.some(x=>x.dia===di&&x.slot===s); }
+function esPendiente(fk,s) { return !!pendientes[sk(fk,s)]; }
+
+// ── NAVEGACION ────────────────────────────────────────────────────
+let calTab = 'dia';
+function ir(v) {
+  document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
+  document.getElementById('view'+v.charAt(0).toUpperCase()+v.slice(1)).classList.add('active');
+  document.querySelectorAll('.bnav-btn').forEach(b=>b.classList.remove('active'));
+  const nb = document.getElementById('bn-'+v);
+  if (nb) nb.classList.add('active');
+  if (v==='cargar')      renderCargar();
+  if (v==='calendario')  renderCalendario();
+  if (v==='franjas')     renderFranjas();
+  if (v==='solicitudes') renderSolicitudes();
+  if (v==='home')        renderHome();
+  window.scrollTo(0,0);
+}
+
+// ── HOME ──────────────────────────────────────────────────────────
+function renderHome() {
+  const n = Object.keys(pendientes).length;
+  ['homeBadge','navBadge','soliBadge'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.textContent=n; el.classList.toggle('hidden',n===0); }
+  });
+}
+
+// ── CARGAR ────────────────────────────────────────────────────────
+let selDate=null, selSlot=null, tipoClase='puntual';
+
+function renderCargar() {
+  selDate=null; selSlot=null;
+  ['secSlot','secNombre'].forEach(id=>document.getElementById(id).classList.add('hidden'));
+  const chips = document.getElementById('dateChips');
+  chips.innerHTML = '';
+  const hoy = new Date(); hoy.setHours(0,0,0,0);
+  let count=0;
+  for (let i=0; count<28; i++) {
+    const d = new Date(hoy); d.setDate(hoy.getDate()+i);
+    if (d.getDay()===0) continue;
+    count++;
+    const di=diIdx(d), chip=document.createElement('div');
+    chip.className='dchip';
+    chip.innerHTML=`<div class="dn">${DIAS_S[di]}</div><div class="dd">${d.getDate()}</div>`;
+    chip.onclick=()=>elegirFecha(d,chip);
+    chips.appendChild(chip);
+  }
+}
+
+function elegirFecha(d,chip) {
+  selDate=d; selSlot=null;
+  document.querySelectorAll('.dchip').forEach(c=>c.classList.remove('sel'));
+  chip.classList.add('sel');
+  renderSlots();
+  document.getElementById('secSlot').classList.remove('hidden');
+  document.getElementById('secNombre').classList.add('hidden');
+}
+
+function renderSlots() {
+  const grid=document.getElementById('timeGrid'); grid.innerHTML='';
+  const fk=fkey(selDate), di=diIdx(selDate);
+  for (let s=0; s<TOTAL_SLOTS; s++) {
+    const ocu=esOcupado(fk,s,di), pend=!ocu&&esPendiente(fk,s), bloq=!ocu&&!pend&&esBloqueado(di,s);
+    const btn=document.createElement('button');
+    btn.className='tbtn'+(ocu?' ocu':pend?' pend':bloq?' bloq':'');
+    btn.textContent=ocu?hora(s)+' ·ocu':pend?hora(s)+' ·pen':bloq?hora(s)+' ·bloq':hora(s);
+    if (!ocu&&!bloq) {
+      btn.onclick=()=>{
+        if (btn.classList.contains('pend')) return;
+        document.querySelectorAll('.tbtn').forEach(b=>b.classList.remove('sel'));
+        btn.classList.add('sel'); selSlot=s;
+        document.getElementById('inpNombre').value='';
+        document.getElementById('secNombre').classList.remove('hidden');
+        document.getElementById('secNombre').scrollIntoView({behavior:'smooth',block:'nearest'});
+      };
+    }
+    grid.appendChild(btn);
+  }
+}
+
+function setTipo(t) {
+  tipoClase=t;
+  document.getElementById('tipoPunt').classList.toggle('active',t==='puntual');
+  document.getElementById('tipoFij').classList.toggle('active',t==='fijo');
+}
+
+function guardarClase() {
+  if (!selDate||selSlot===null) return;
+  const fk=fkey(selDate), di=diIdx(selDate);
+  const nombre=document.getElementById('inpNombre').value.trim()||null;
+  if (tipoClase==='fijo') { fijos[di+'_'+selSlot]={nombre:nombre||'Alumno fijo'}; saveFij(); toast('Alumno fijo guardado'); }
+  else { ocupados[sk(fk,selSlot)]=nombre?{nombre}:true; saveOcu(); toast('Clase cargada'); }
+  selSlot=null;
+  document.getElementById('secNombre').classList.add('hidden');
+  renderSlots();
+}
+
+// ── CALENDARIO ────────────────────────────────────────────────────
+let diaOff=0, semOff=0, mesOff=0;
+
+function setTab(t,btn) {
+  calTab=t;
+  document.querySelectorAll('.ctab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tabDia').classList.toggle('hidden',t!=='dia');
+  document.getElementById('tabSemana').classList.toggle('hidden',t!=='semana');
+  document.getElementById('tabMes').classList.toggle('hidden',t!=='mes');
+  renderCalendario();
+}
+
+function renderCalendario() {
+  if (calTab==='dia')    renderDia();
+  if (calTab==='semana') renderSemana();
+  if (calTab==='mes')    renderMes();
+}
+
+function getDiaDate() {
+  const hoy=new Date(); hoy.setHours(0,0,0,0);
+  const d=new Date(hoy); d.setDate(hoy.getDate()+diaOff);
+  if (d.getDay()===0) { diaOff+=1; d.setDate(d.getDate()+1); }
+  return d;
+}
+function cambiarDia(dir) {
+  diaOff+=dir;
+  const d=new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate()+diaOff);
+  if (d.getDay()===0) diaOff+=(dir>0?1:-1);
+  if (diaOff<0) diaOff=0;
+  renderDia();
+}
+function renderDia() {
+  const d=getDiaDate(), fk=fkey(d), di=diIdx(d);
+  const hoy=new Date(); hoy.setHours(0,0,0,0);
+  document.getElementById('btnDiaPrev').style.visibility=(d<=hoy)?'hidden':'visible';
+  document.getElementById('diaLabel').textContent=
+    d.toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'}).replace(/^\w/,c=>c.toUpperCase());
+  const cont=document.getElementById('daySlots'); cont.innerHTML='';
+  for (let s=0; s<TOTAL_SLOTS; s++) {
+    const fij=fijos[di+'_'+s], ocuV=ocupados[sk(fk,s)];
+    const ocu=!!ocuV||!!fij||SIEMPRE.some(x=>x.dia===di&&x.slot===s);
+    const pend=!ocu&&!!pendientes[sk(fk,s)];
+    const bloq=!ocu&&!pend&&esBloqueado(di,s);
+    const esSiempre=SIEMPRE.some(x=>x.dia===di&&x.slot===s);
+    const div=document.createElement('div');
+    let cls='dslot ', label='';
+    if (fij)       { cls+='fijo'; label=(fij.nombre||'Alumno fijo')+' — fijo'; }
+    else if (ocu)  { cls+='ocu';  label=(ocuV&&ocuV.nombre)?ocuV.nombre:'Ocupado'; }
+    else if (pend) { cls+='pend'; label=(pendientes[sk(fk,s)].nombre||'')+' — pendiente'; }
+    else if (bloq) { cls+='bloq'; label='Bloqueado'; }
+    else           { cls+='libre'; label='+ Marcar'; }
+    div.className=cls;
+    div.innerHTML=`<span class="hora">${hora(s)}</span><span class="estado">${label}</span>`;
+    if (!ocu&&!pend&&!bloq) {
+      div.onclick=()=>{ ocupados[sk(fk,s)]=true; saveOcu(); renderDia(); toast('Marcado'); };
+    } else if (!esSiempre&&!fij&&ocu) {
+      const del=document.createElement('button');
+      del.className='dslot-del'; del.textContent='×'; del.title='Liberar';
+      del.onclick=e=>{ e.stopPropagation(); delete ocupados[sk(fk,s)]; saveOcu(); renderDia(); toast('Liberado'); };
+      div.appendChild(del);
+    }
+    cont.appendChild(div);
+  }
+}
+
+function getSemFechas() {
+  const hoy=new Date(); hoy.setHours(0,0,0,0);
+  const lun=new Date(hoy); lun.setDate(hoy.getDate()-((hoy.getDay()+6)%7)+semOff*7);
+  return Array.from({length:6},(_,i)=>{ const d=new Date(lun); d.setDate(lun.getDate()+i); return d; });
+}
+function cambiarSem(dir) { if (dir<0&&semOff<=0) return; semOff+=dir; renderSemana(); }
+function renderSemana() {
+  const fechas=getSemFechas(), hoy=new Date(); hoy.setHours(0,0,0,0);
+  const fmt=d=>d.toLocaleDateString('es-ES',{day:'numeric',month:'short'});
+  document.getElementById('semLabel').textContent=`${fmt(fechas[0])} – ${fmt(fechas[5])}`;
+  document.getElementById('btnSemPrev').style.visibility=semOff<=0?'hidden':'visible';
+  document.getElementById('wkHdr').innerHTML='<div></div>'+fechas.map((d,i)=>
+    `<div class="wk-day${d.getTime()===hoy.getTime()?' today':''}">${DIAS_S[i]}<br><span style="font-size:.85rem;font-weight:700;">${d.getDate()}</span></div>`
+  ).join('');
+  const body=document.getElementById('wkBody'); body.innerHTML='';
+  for (let s=0; s<TOTAL_SLOTS; s++) {
+    const row=document.createElement('div'); row.className='wk-row';
+    const tl=document.createElement('div'); tl.className='wk-time';
+    if (s%2===0) tl.textContent=hora(s); row.appendChild(tl);
+    fechas.forEach((fecha,di)=>{
+      const fk=fkey(fecha), fij=fijos[di+'_'+s];
+      const ocu=!!ocupados[sk(fk,s)]||!!fij||SIEMPRE.some(x=>x.dia===di&&x.slot===s);
+      const pend=!ocu&&!!pendientes[sk(fk,s)];
+      const bloq=!ocu&&!pend&&esBloqueado(di,s);
+      const cell=document.createElement('div');
+      cell.className='wk-cell'+(fij?' fijo':ocu?' ocu':pend?' pend':bloq?' bloq':'');
+      const esSiempre=SIEMPRE.some(x=>x.dia===di&&x.slot===s);
+      if (!ocu&&!pend&&!bloq) {
+        cell.onclick=()=>{ ocupados[sk(fk,s)]=true; saveOcu(); renderSemana(); toast('Marcado'); };
+      } else if (!esSiempre&&!fij&&ocu) {
+        cell.title='Toca para liberar';
+        cell.onclick=()=>{ delete ocupados[sk(fk,s)]; saveOcu(); renderSemana(); toast('Liberado'); };
+      }
+      row.appendChild(cell);
+    });
+    body.appendChild(row);
+  }
+}
+
+function cambiarMes(dir) { mesOff+=dir; renderMes(); }
+function renderMes() {
+  const hoy=new Date(); hoy.setHours(0,0,0,0);
+  const base=new Date(hoy.getFullYear(),hoy.getMonth()+mesOff,1);
+  document.getElementById('mesLabel').textContent=`${MESES[base.getMonth()]} ${base.getFullYear()}`;
+  const primerDia=(base.getDay()+6)%7, diasMes=new Date(base.getFullYear(),base.getMonth()+1,0).getDate();
+  const body=document.getElementById('monthBody'); body.innerHTML='';
+  for (let i=0;i<primerDia;i++){const e=document.createElement('div');e.className='mcell otro';body.appendChild(e);}
+  for (let day=1;day<=diasMes;day++) {
+    const d=new Date(base.getFullYear(),base.getMonth(),day);
+    const di=(d.getDay()+6)%7, fk=fkey(d);
+    const esH=d.getTime()===hoy.getTime(), esD=d.getDay()===0;
+    let ocuCnt=0;
+    for (let s=0;s<TOTAL_SLOTS;s++){if(esOcupado(fk,s,di))ocuCnt++;}
+    const pct=ocuCnt/TOTAL_SLOTS;
+    const cell=document.createElement('div');
+    cell.className='mcell'+(esH?' today':'')+(esD?' dom':'')+(pct>.5?' hiOcu':pct>.2?' midOcu':'');
+    cell.textContent=day;
+    if (!esD&&ocuCnt>0){const dot=document.createElement('div');dot.className='mdot';dot.style.background=pct>.5?'var(--rojo)':'var(--amarillo)';cell.appendChild(dot);}
+    if (!esD) {
+      cell.onclick=()=>{
+        const hoyRef=new Date();hoyRef.setHours(0,0,0,0);
+        diaOff=Math.round((d-hoyRef)/86400000);if(diaOff<0)diaOff=0;
+        calTab='dia';
+        document.querySelectorAll('.ctab').forEach((b,i)=>b.classList.toggle('active',i===0));
+        ['tabDia','tabSemana','tabMes'].forEach((id,i)=>document.getElementById(id).classList.toggle('hidden',i!==0));
+        renderDia();
+      };
+    }
+    body.appendChild(cell);
+  }
+}
+
+// ── FRANJAS HORARIAS ─────────────────────────────────────────────
+let franjaDia = 0; // dia activo en la vista franjas (0=Lun…5=Sab)
+
+function renderFranjas() {
+  // Construir tabs de dias
+  const tabs=document.getElementById('dayTabs'); tabs.innerHTML='';
+  DIAS_L.forEach((d,i)=>{
+    const btn=document.createElement('button');
+    btn.className='dtab'+(i===franjaDia?' active':'');
+    btn.textContent=d;
+    btn.onclick=()=>{ franjaDia=i; renderFranjas(); };
+    tabs.appendChild(btn);
+  });
+  document.getElementById('franjasDayName').textContent=DIAS_L[franjaDia];
+  renderFranjaGrid();
+}
+
+function renderFranjaGrid() {
+  const grid=document.getElementById('franjaGrid'); grid.innerHTML='';
+  for (let s=0;s<TOTAL_SLOTS;s++) {
+    const on=!!franjas[franjaDia+'_'+s];
+    const btn=document.createElement('button');
+    btn.className='fbtn'+(on?' on':'');
+    btn.textContent=hora(s);
+    btn.onclick=()=>{
+      const key=franjaDia+'_'+s;
+      if (franjas[key]) delete franjas[key]; else franjas[key]=true;
+      btn.classList.toggle('on', !!franjas[key]);
+    };
+    grid.appendChild(btn);
+  }
+  updateFranjaStatus();
+}
+
+function presetFranjas(tipo) {
+  for (let s=0;s<TOTAL_SLOTS;s++) {
+    const key=franjaDia+'_'+s;
+    const h=MIN_INI+s*30;
+    let on=false;
+    if (tipo==='manana')  on=(h>=9*60&&h<13*60);
+    if (tipo==='tarde')   on=(h>=15*60&&h<19*60);
+    if (tipo==='todo')    on=true;
+    if (tipo==='ninguno') on=false;
+    if (on) franjas[key]=true; else delete franjas[key];
+  }
+  renderFranjaGrid();
+}
+
+function updateFranjaStatus() {
+  const count=Object.keys(franjas).filter(k=>parseInt(k.split('_')[0])===franjaDia).length;
+  const el=document.getElementById('franjaStatus');
+  if (count>0) {
+    el.classList.remove('hidden');
+    el.textContent=`${count} horarios habilitados para ${DIAS_L[franjaDia]}. El resto aparece como "Horario bloqueado".`;
+  } else {
+    el.classList.add('hidden');
+  }
+}
+
+function guardarFranja(modo) {
+  if (modo==='semana') {
+    // Copiar la configuracion del dia actual a todos los dias
+    // Primero limpiar todos los dias
+    for (let di=0;di<6;di++) {
+      for (let s=0;s<TOTAL_SLOTS;s++) delete franjas[di+'_'+s];
+    }
+    // Aplicar la config del dia actual a todos los dias
+    for (let s=0;s<TOTAL_SLOTS;s++) {
+      if (franjas[franjaDia+'_'+s]) {
+        for (let di=0;di<6;di++) franjas[di+'_'+s]=true;
+      }
+    }
+    saveFranjas();
+    toast('Franjas aplicadas a toda la semana');
+  } else {
+    saveFranjas();
+    toast('Franjas guardadas para '+DIAS_L[franjaDia]);
+  }
+  updateFranjaStatus();
+}
+
+// ── SOLICITUDES ───────────────────────────────────────────────────
+function renderSolicitudes() {
+  const pens=Object.entries(pendientes);
+  const badge=document.getElementById('soliBadge');
+  badge.textContent=pens.length; badge.classList.toggle('hidden',pens.length===0);
+  const list=document.getElementById('soliList');
+  if (pens.length===0){list.innerHTML='<div class="empty">No hay solicitudes pendientes</div>';return;}
+  list.innerHTML=pens.map(([key,p])=>{
+    const parts=key.split('_'), fechaStr=parts[0], slotIdx=parseInt(parts[1]);
+    const horaStr=hora(slotIdx);
+    const fechaFmt=new Date(fechaStr+'T12:00:00').toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'}).replace(/^\w/,c=>c.toUpperCase());
+    return `<div class="soli-card">
+      <div class="soli-name">${p.nombre}</div>
+      <div class="soli-detail">
+        <strong>${fechaFmt}</strong>, ${horaStr} hs<br>
+        Sede: ${p.sede||'—'} &nbsp;·&nbsp; Nivel: ${p.nivel||'—'}<br>
+        WA: ${p.wa||'—'}${p.nota?'<br>Nota: '+p.nota:''}
+      </div>
+      <div class="soli-actions">
+        <button class="btn-ok"  onclick="aprobar('${key}')">Confirmar</button>
+        <button class="btn-ok2" onclick="aprobarFijo('${key}')">Fijo</button>
+        <button class="btn-no"  onclick="rechazar('${key}')">Rechazar</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function aprobar(key) {
+  const p=pendientes[key]; if(!p)return;
+  ocupados[key]={nombre:p.nombre}; delete pendientes[key];
+  saveOcu(); savePen(); renderSolicitudes(); renderHome(); toast('Clase confirmada');
+}
+function aprobarFijo(key) {
+  const p=pendientes[key]; if(!p)return;
+  fijos[p.dia+'_'+p.slot]={nombre:p.nombre}; delete pendientes[key];
+  saveFij(); savePen(); renderSolicitudes(); renderHome(); toast('Alumno fijo registrado');
+}
+function rechazar(key) {
+  delete pendientes[key]; savePen(); renderSolicitudes(); renderHome(); toast('Solicitud rechazada');
+}
+
+// ── LOGOUT ────────────────────────────────────────────────────────
+function logout() {
+  sessionStorage.removeItem('rg_admin_auth'); sessionStorage.removeItem('rg_admin_user');
+  window.location.href='/admin';
+}
+
+// ── TOAST ─────────────────────────────────────────────────────────
+let toastTmr;
+function toast(msg) {
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.classList.add('show');
+  clearTimeout(toastTmr); toastTmr=setTimeout(()=>el.classList.remove('show'),2000);
+}
+
+// ── INIT ──────────────────────────────────────────────────────────
+renderHome();
+</script>
+</body>
+</html>

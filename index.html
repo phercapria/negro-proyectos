@@ -18,6 +18,7 @@
       --ocupado-bg:   #ff2d20;
       --ocupado-txt:  #ffffff;
       --libre-bg:     #2a2a2a;
+      --bloq-bg:      #1e1a0e;
       --libre-hover:  #333333;
     }
     *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -33,7 +34,7 @@
     }
     .header-brand { cursor:pointer; user-select:none; }
     .header-brand h1 {
-      font-size:1.3rem; font-weight:700; line-height:1.1; margin:0; color:#fff;
+      font-size:1.95rem; font-weight:700; line-height:1.1; margin:0; color:#fff;
     }
     .header-brand h1 span { color:var(--verde); display:block; }
     .header-social { display:flex; gap:16px; align-items:center; margin-top:6px; }
@@ -233,6 +234,18 @@
       letter-spacing:.04em;
     }
 
+    .cal-cell.bloqueado {
+      background:var(--bloq-bg);
+      cursor:default;
+    }
+    .cal-cell.bloqueado::after {
+      content:'Horario bloqueado';
+      position:absolute; inset:0;
+      display:flex; align-items:center; justify-content:center;
+      font-size:.6rem; color:rgba(255,180,0,.35); font-weight:600;
+      letter-spacing:.03em;
+    }
+
     .cal-cell.ocupado {
       background:var(--ocupado-bg);
       cursor:default;
@@ -400,7 +413,7 @@
   </div>
   <div class="header-social">
     <a href="https://www.instagram.com/gila_tenisdemesa/" target="_blank" aria-label="Instagram">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+      <svg width="33" height="33" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
     </a>
   </div>
 </header>
@@ -460,9 +473,10 @@
   <div class="modal" onclick="e=>e.stopPropagation()">
     <h3>Solicitar clase</h3>
     <p class="modal-sub">Completá tus datos y te contactamos por WhatsApp con toda la información.</p>
-    <div class="slot-badge" id="slotBadge" style="cursor:pointer;" onclick="cerrarModal('modalPostula')" title="Tocá para cambiar el horario"></div>
-    <div style="text-align:right;margin-top:-12px;margin-bottom:14px;">
-      <button type="button" onclick="cerrarModal('modalPostula')" style="background:none;border:none;color:var(--verde);font-size:.78rem;font-weight:600;cursor:pointer;padding:0;">Cambiar horario ›</button>
+    <div class="slot-badge" id="slotBadge"></div>
+    <div class="form-group" style="margin-top:10px;">
+      <label>Horario</label>
+      <select id="postHorario" onchange="cambiarHorarioModal(this.value)"></select>
     </div>
     <div class="form-group">
       <label>Tu nombre completo *</label>
@@ -626,8 +640,16 @@ let cfg        = Object.assign({}, DEFAULT_CFG, JSON.parse(localStorage.getItem(
 let ocupados   = JSON.parse(localStorage.getItem('rg_ocu') || '{}'); // { 'YYYY-MM-DD_slot': true }
 let pendientes = JSON.parse(localStorage.getItem('rg_pen') || '{}'); // { 'YYYY-MM-DD_slot': {id,nombre,wa,...} }
 let fijos      = JSON.parse(localStorage.getItem('rg_fij') || '{}'); // { 'dia_slot': {nombre} }
+let franjas    = JSON.parse(localStorage.getItem('rg_franjas') || '{}'); // { 'dia_slot': true }
 function guardarPen() { localStorage.setItem('rg_pen', JSON.stringify(pendientes)); }
 function guardarFij() { localStorage.setItem('rg_fij', JSON.stringify(fijos)); }
+
+function esBloqueado(di, s) {
+  if (Object.keys(franjas).length === 0) return false;
+  const tieneDia = Object.keys(franjas).some(k => parseInt(k.split('_')[0]) === di);
+  if (!tieneDia) return false;
+  return !franjas[di + '_' + s];
+}
 
 // ─── DEMO: poblar slots ocupados si es primera visita ────────────
 (function initDemo() {
@@ -761,7 +783,8 @@ function renderCalendario() {
       const fijoKey = di + '_' + s;
       const ocup  = !!ocupados[sk] || !!fijos[fijoKey] || SIEMPRE_OCUPADO.some(x => x.dia === di && x.slot === s);
       const pend  = !ocup && !!pendientes[sk];
-      cell.className = 'cal-cell ' + (ocup ? 'ocupado' : pend ? 'pendiente' : 'libre');
+      const bloq = !ocup && !pend && !adminMode && esBloqueado(di, s);
+      cell.className = 'cal-cell ' + (ocup ? 'ocupado' : pend ? 'pendiente' : bloq ? 'bloqueado' : 'libre');
       // Tooltip con nombre en slots ocupados (admin)
       const infoOcup = fijos[fijoKey] ? fijos[fijoKey] : (ocupados[sk] && typeof ocupados[sk]==='object' ? ocupados[sk] : null);
       if (ocup && infoOcup && infoOcup.nombre) cell.title = infoOcup.nombre;
@@ -772,7 +795,7 @@ function renderCalendario() {
       if (adminMode) {
         if (ocup) cell.onclick = () => adminVerOcupado(fk, s, di, cell);
         else      cell.onclick = () => adminMarcarSlot(fk, s, di, fecha);
-      } else if (!ocup && !pend) {
+      } else if (!ocup && !pend && !bloq) {
         cell.onclick = () => abrirPostula(fk, s, fecha, di);
       }
 
@@ -989,6 +1012,11 @@ function rechazarSolicitud(sk) {
 }
 
 // ─── MODAL: POSTULARSE ────────────────────────────────────────────
+function cambiarHorarioModal(nuevoSlot) {
+  if (!slotSel) return;
+  slotSel.slot = parseInt(nuevoSlot);
+}
+
 function parsePrecioNum(precioStr) {
   // Extracts numeric value from strings like '$45.000' or '$15.000'
   return parseInt((precioStr || '').replace(/[^\d]/g, ''), 10) || 0;
@@ -999,14 +1027,31 @@ function formatPrecio(num) {
 }
 
 function abrirPostula(fecha, slot, dateObj, diaIdx) {
-  slotSel = { fecha, slot, diaLabel: DIAS[diaIdx], fecha_obj: dateObj };
-  const horaStr = slotAHora(slot);
+  slotSel = { fecha, slot, diaLabel: DIAS[diaIdx], fecha_obj: dateObj, diaIdx };
   const fechaStr = dateObj.toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'});
   document.getElementById('slotBadge').innerHTML =
-    `<strong>${fechaStr.charAt(0).toUpperCase()+fechaStr.slice(1)}</strong><br>${horaStr} hs`;
+    `<strong>${fechaStr.charAt(0).toUpperCase()+fechaStr.slice(1)}</strong>`;
   document.getElementById('postNombre').value = '';
   document.getElementById('postWA').value     = '';
   document.getElementById('postNota').value   = '';
+  // Poblar dropdown de horarios disponibles para ese día
+  const sel = document.getElementById('postHorario');
+  if (sel) {
+    sel.innerHTML = '';
+    for (let s = 0; s < TOTAL_SLOTS; s++) {
+      const sk2 = slotKey(fecha, s);
+      const ocup2 = !!ocupados[sk2] || !!fijos[diaIdx+'_'+s] || SIEMPRE_OCUPADO.some(x=>x.dia===diaIdx&&x.slot===s);
+      const pend2 = !ocup2 && !!pendientes[sk2];
+      const bloq2 = !ocup2 && !pend2 && esBloqueado(diaIdx, s);
+      if (!ocup2 && !pend2 && !bloq2) {
+        const opt = document.createElement('option');
+        opt.value = s;
+        opt.textContent = slotAHora(s) + ' hs';
+        if (s === slot) opt.selected = true;
+        sel.appendChild(opt);
+      }
+    }
+  }
   // Mostrar duración con precio
   const p1 = parsePrecioNum(cfg.precio);
   const durDisplay = document.getElementById('duracionDisplay');
@@ -1018,15 +1063,17 @@ function enviarSolicitud() {
   const nombre   = document.getElementById('postNombre').value.trim();
   const waNum    = document.getElementById('postWA').value.trim().replace(/\D/g,'');
   const sede     = document.getElementById('postSede').value;
-  const duracion = document.getElementById('postDuracion').value;
   const nivel    = document.getElementById('postNivel').value;
   const nota     = document.getElementById('postNota').value.trim();
+  // Leer slot del dropdown (puede haber cambiado)
+  const selH = document.getElementById('postHorario');
+  if (selH && selH.value) slotSel.slot = parseInt(selH.value);
 
   if (!nombre) { toast('Por favor ingresá tu nombre'); return; }
   if (!waNum || waNum.length < 8) { toast('Por favor ingresá tu número de WhatsApp'); return; }
 
   const horaIni  = slotAHora(slotSel.slot);
-  const horaFin  = slotAHora(slotSel.slot + parseInt(duracion) * 2);
+  const horaFin  = slotAHora(slotSel.slot + 2); // 1 hora = 2 slots
   const fechaStr = slotSel.fecha_obj.toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'});
 
   const msg = [
@@ -1151,8 +1198,8 @@ function cerrarModal(id, e) {
         overlay.querySelector('.modal').innerHTML = `
           <h3>Solicitar clase</h3>
           <p class="modal-sub">Completá tus datos y te contactamos por WhatsApp con toda la información.</p>
-          <div class="slot-badge" id="slotBadge" style="cursor:pointer;" onclick="cerrarModal('modalPostula')" title="Tocá para cambiar el horario"></div>
-          <div style="text-align:right;margin-top:-12px;margin-bottom:14px;"><button type="button" onclick="cerrarModal('modalPostula')" style="background:none;border:none;color:var(--verde);font-size:.78rem;font-weight:600;cursor:pointer;padding:0;">Cambiar horario ›</button></div>
+          <div class="slot-badge" id="slotBadge"></div>
+          <div class="form-group" style="margin-top:10px;"><label>Horario</label><select id="postHorario" onchange="cambiarHorarioModal(this.value)"></select></div>
           <div class="form-group"><label>Tu nombre completo *</label><input type="text" id="postNombre" placeholder="Ej: Juan García" maxlength="40"></div>
           <div class="form-group"><label>Tu número de WhatsApp *</label><input type="tel" id="postWA" placeholder="Ej: 1134567890 (sin 0 ni 15)" maxlength="20"></div>
           <div class="form-group"><label>Sede preferida</label><select id="postSede"><option value="King Pong (Luis Viale 526)">King Pong — Luis Viale 526</option><option value="Yabrudense (Alberti 1541)">Yabrudense — Alberti 1541</option><option value="Sin preferencia">Sin preferencia / cualquiera</option></select></div>

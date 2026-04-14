@@ -92,7 +92,7 @@
     /* ── MOBILE ─────────────────────────────────── */
     @media(max-width:600px) {
       .bg {
-        background:url('rodrigo.jpeg') 85% 10% / cover no-repeat;
+        background:url('rodrigo.jpeg') 15% 5% / cover no-repeat;
       }
       .bg::after {
         background:linear-gradient(to bottom,
@@ -199,7 +199,7 @@ function login(e) {
   if ((users[usuario] && users[usuario] === hashSimple(password)) || password === adminPass) {
     sessionStorage.setItem('rg_admin_user', usuario || 'admin');
     sessionStorage.setItem('rg_admin_auth', '1');
-    window.location.href = '/?admin=1';
+    window.location.href = '/dashboard';
   } else {
     const err = document.getElementById('errorMsg');
     err.style.display = 'block';
