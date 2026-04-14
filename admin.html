@@ -89,6 +89,24 @@
     .btn-login:hover { background:#1ebe5b; transform:translateY(-1px); }
     .btn-login:active { transform:translateY(0); }
 
+    /* Links de cabecera */
+    .header-links {
+      position: fixed; top: 24px; right: 28px;
+      z-index: 10;
+      display: flex; align-items: center; gap: 18px;
+    }
+    .header-links a {
+      display: flex; align-items: center;
+      text-decoration: none;
+      color: rgba(255,255,255,.55);
+      font-size: .85rem; font-weight: 600;
+      font-family: inherit;
+      transition: color .2s;
+    }
+    .header-links a:hover { color: #25d366; }
+    .header-links a.ig-link { color: rgba(255,255,255,.7); }
+    .header-links a.ig-link:hover { color: #fff; }
+
     /* ── MOBILE ─────────────────────────────────── */
     @media(max-width:600px) {
       .bg {
@@ -124,6 +142,17 @@
 <body>
 
 <div class="bg"></div>
+
+<div class="header-links">
+  <a href="/" class="ir-link">Ir al sitio</a>
+  <a href="https://www.instagram.com/rodrigogilabert.tt/" target="_blank" rel="noopener" class="ig-link" aria-label="Instagram">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+      <circle cx="12" cy="12" r="4.5"/>
+      <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/>
+    </svg>
+  </a>
+</div>
 
 <div class="content">
   <div class="form-wrap">
