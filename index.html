@@ -204,7 +204,7 @@
     }
     .cal-cell {
       height:52px; border-right:1px solid #3c3c3c;
-      position:relative; transition:background .15s;
+      position:relative;
     }
     .cal-cell:last-child { border-right:none; }
 
@@ -1204,11 +1204,15 @@ function init() {
   renderCalendario();
   setInterval(() => { if (semanaOff === 0) renderCalendario(); }, 60000);
 
-  // Re-render al resize
+  // Re-render al resize (solo si cambia el ancho, ignora cambios de altura por toolbar mobile)
   let resizeTimer;
+  let lastWidth = window.innerWidth;
   window.addEventListener('resize', () => {
+    const w = window.innerWidth;
+    if (w === lastWidth) return; // solo cambio de alto (toolbar mobile) → ignorar
+    lastWidth = w;
     clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(renderCalendario, 150);
+    resizeTimer = setTimeout(renderCalendario, 300);
   });
 
   // ── SWIPE / WHEEL PARA CAMBIAR SEMANA ──────────────────
