@@ -1,6 +1,7 @@
 {
   "rewrites": [
-    { "source": "/admin",     "destination": "/admin.html" },
-    { "source": "/dashboard", "destination": "/dashboard.html" }
+    { "source": "/",          "destination": "/rodrigo-gilabert/index.html" },
+    { "source": "/admin",     "destination": "/rodrigo-gilabert/admin.html" },
+    { "source": "/dashboard", "destination": "/rodrigo-gilabert/dashboard.html" }
   ]
 }
