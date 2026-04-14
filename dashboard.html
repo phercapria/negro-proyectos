@@ -239,6 +239,22 @@
       <button class="tipo-btn active" id="tipoPunt" onclick="setTipo('puntual')">Clase puntual</button>
       <button class="tipo-btn" id="tipoFij" onclick="setTipo('fijo')">Alumno fijo</button>
     </div>
+    <div id="secFijoDias" class="hidden" style="margin-bottom:16px;">
+      <div class="lbl" style="margin-bottom:8px;">Repetir en</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <label style="display:flex;align-items:center;gap:10px;padding:11px 14px;background:var(--fondo3);border:1.5px solid var(--borde);border-radius:10px;cursor:pointer;" id="fijoOptDia">
+          <input type="radio" name="fijoRep" value="dia" checked style="accent-color:var(--verde);width:16px;height:16px;">
+          <span style="font-size:.88rem;font-weight:600;" id="fijoOptDiaLabel">Todos los Lunes</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;padding:11px 14px;background:var(--fondo3);border:1.5px solid var(--borde);border-radius:10px;cursor:pointer;">
+          <input type="radio" name="fijoRep" value="custom" style="accent-color:var(--verde);width:16px;height:16px;" onchange="toggleDiasCustom(this)">
+          <span style="font-size:.88rem;font-weight:600;">Elegir dias especificos</span>
+        </label>
+      </div>
+      <div id="diasCustom" class="hidden" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;">
+        <!-- checkboxes for each day will be rendered by JS -->
+      </div>
+    </div>
     <div class="field-group">
       <label>Nombre del alumno (opcional)</label>
       <input type="text" id="inpNombre" placeholder="Ej: Juan Garcia" maxlength="40">
@@ -249,7 +265,11 @@
 
 <!-- ── CALENDARIO ── -->
 <div class="view" id="viewCalendario">
-  <div class="view-hdr"><button class="btn-back" onclick="ir('home')">‹</button><h2>Calendario</h2></div>
+  <div class="view-hdr">
+    <button class="btn-back" onclick="ir('home')">‹</button>
+    <h2>Calendario</h2>
+    <button onclick="actualizarDatos()" style="margin-left:auto;background:none;border:1px solid var(--borde);border-radius:20px;color:var(--suave);font-size:.75rem;padding:5px 14px;cursor:pointer;">Actualizar</button>
+  </div>
   <div class="cal-tabs">
     <button class="ctab active" onclick="setTab('dia',this)">Dia</button>
     <button class="ctab" onclick="setTab('semana',this)">Semana</button>
@@ -427,6 +447,9 @@ function elegirFecha(d,chip) {
   renderSlots();
   document.getElementById('secSlot').classList.remove('hidden');
   document.getElementById('secNombre').classList.add('hidden');
+  // update fijo day label
+  const fijoLabel = document.getElementById('fijoOptDiaLabel');
+  if (fijoLabel) fijoLabel.textContent = 'Todos los ' + DIAS_L[diIdx(d)];
 }
 
 function renderSlots() {
@@ -452,19 +475,45 @@ function renderSlots() {
 }
 
 function setTipo(t) {
-  tipoClase=t;
-  document.getElementById('tipoPunt').classList.toggle('active',t==='puntual');
-  document.getElementById('tipoFij').classList.toggle('active',t==='fijo');
+  tipoClase = t;
+  document.getElementById('tipoPunt').classList.toggle('active', t === 'puntual');
+  document.getElementById('tipoFij').classList.toggle('active',  t === 'fijo');
+  document.getElementById('secFijoDias').classList.toggle('hidden', t !== 'fijo');
 }
 
 function guardarClase() {
-  if (!selDate||selSlot===null) return;
-  const fk=fkey(selDate), di=diIdx(selDate);
-  const nombre=document.getElementById('inpNombre').value.trim()||null;
-  if (tipoClase==='fijo') { fijos[di+'_'+selSlot]={nombre:nombre||'Alumno fijo'}; saveFij(); toast('Alumno fijo guardado'); }
-  else { ocupados[sk(fk,selSlot)]=nombre?{nombre}:true; saveOcu(); toast('Clase cargada'); }
-  selSlot=null;
+  if (!selDate || selSlot === null) return;
+  const fk     = fkey(selDate);
+  const di     = diIdx(selDate);
+  const nombre = document.getElementById('inpNombre').value.trim() || null;
+
+  if (tipoClase === 'fijo') {
+    const rep = document.querySelector('input[name="fijoRep"]:checked').value;
+    if (rep === 'dia') {
+      // todos los [dia de semana]
+      fijos[di + '_' + selSlot] = { nombre: nombre || 'Alumno fijo' };
+      saveFij();
+      toast('Alumno fijo guardado para todos los ' + DIAS_L[di]);
+    } else {
+      // dias custom
+      const checks = document.querySelectorAll('#diasCustom input[type="checkbox"]:checked');
+      checks.forEach(cb => {
+        fijos[parseInt(cb.value) + '_' + selSlot] = { nombre: nombre || 'Alumno fijo' };
+      });
+      saveFij();
+      toast('Alumno fijo guardado en ' + checks.length + ' dias');
+    }
+  } else {
+    ocupados[sk(fk, selSlot)] = nombre ? { nombre } : true;
+    saveOcu();
+    toast('Clase cargada');
+  }
+  selSlot = null;
   document.getElementById('secNombre').classList.add('hidden');
+  document.getElementById('secFijoDias').classList.add('hidden');
+  tipoClase = 'puntual';
+  document.getElementById('tipoPunt').classList.add('active');
+  document.getElementById('tipoFij').classList.remove('active');
   renderSlots();
 }
 
@@ -740,6 +789,33 @@ function toast(msg) {
   const el=document.getElementById('toast');
   el.textContent=msg; el.classList.add('show');
   clearTimeout(toastTmr); toastTmr=setTimeout(()=>el.classList.remove('show'),2000);
+}
+
+function actualizarDatos() {
+  ocupados   = JSON.parse(localStorage.getItem('rg_ocu') || '{}');
+  pendientes = JSON.parse(localStorage.getItem('rg_pen') || '{}');
+  fijos      = JSON.parse(localStorage.getItem('rg_fij') || '{}');
+  franjas    = JSON.parse(localStorage.getItem('rg_franjas') || '{}');
+  renderCalendario();
+  renderHome();
+  toast('Actualizado');
+}
+
+function toggleDiasCustom(radio) {
+  const cont = document.getElementById('diasCustom');
+  if (radio.checked) {
+    cont.style.display = 'flex';
+    if (!cont.children.length) {
+      DIAS_L.forEach((d, i) => {
+        const lbl = document.createElement('label');
+        lbl.style.cssText = 'display:flex;align-items:center;gap:6px;padding:8px 12px;background:var(--fondo3);border:1.5px solid var(--borde);border-radius:8px;cursor:pointer;font-size:.82rem;font-weight:600;';
+        lbl.innerHTML = `<input type="checkbox" value="${i}" style="accent-color:var(--verde);" checked> ${d}`;
+        cont.appendChild(lbl);
+      });
+    }
+  } else {
+    cont.style.display = 'none';
+  }
 }
 
 // ── INIT ──────────────────────────────────────────────────────────

@@ -344,25 +344,12 @@
     .success-msg p  { font-size:.85rem; color:var(--texto-suave); line-height:1.6; }
     @keyframes pop { 0%{transform:scale(0)} 70%{transform:scale(1.2)} 100%{transform:scale(1)} }
 
-    /* ── ADMIN ───────────────────────────────────────── */
-    .admin-bar {
-      background:rgba(255,77,79,.08); border:1px solid rgba(255,77,79,.25);
-      border-radius:10px; padding:12px 18px;
-      display:flex; align-items:center; justify-content:space-between; gap:12px;
-      margin-bottom:16px; flex-wrap:wrap;
-    }
-    .admin-bar p { font-size:.82rem; color:#ff8a8b; font-weight:600; }
-    .admin-bar .admin-actions { display:flex; gap:8px; }
-    .admin-mode .cal-cell.libre { cursor:pointer; }
-    .admin-mode .cal-cell.libre:hover::after { content:'+ Marcar ocupado'; }
-
     /* ── FOOTER ──────────────────────────────────────── */
     footer {
       background:var(--fondo);
       padding:28px 32px; text-align:center;
       font-size:.78rem; color:var(--texto-suave);
     }
-    .footer-trigger { cursor:pointer; }
 
     /* ── TOAST ───────────────────────────────────────── */
     .toast {
@@ -446,18 +433,6 @@
     </svg>
   </button>
   <div class="cal-inner-wrap">
-  <!-- Barra admin (visible solo en modo admin) -->
-  <div class="admin-bar hidden" id="adminBar">
-    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-      <span style="font-size:.82rem;color:#ff8a8b;font-weight:600;">Modo administrador</span>
-      <button class="btn btn-secondary" style="font-size:.75rem;padding:5px 12px;position:relative;" onclick="abrirPendientes()">
-        Solicitudes <span id="pendBadge" style="display:none;background:#ff2d20;color:#fff;border-radius:50%;width:18px;height:18px;font-size:.65rem;font-weight:700;display:inline-flex;align-items:center;justify-content:center;margin-left:4px;" id="pendBadge">0</span>
-      </button>
-      <button class="btn btn-secondary" style="font-size:.75rem;padding:5px 12px;" onclick="abrirConfigAdmin()">Configuración</button>
-      <button class="btn btn-danger"    style="font-size:.75rem;padding:5px 12px;" onclick="salirAdmin()">Salir</button>
-    </div>
-  </div>
-
   <div class="cal-wrapper" id="calWrapper">
     <div class="cal-inner">
       <div class="cal-header" id="calHeader"></div>
@@ -522,58 +497,6 @@
   </div>
 </div>
 
-<!-- ── MODAL: MARCAR SLOT (ADMIN) ── -->
-<div class="overlay hidden" id="modalMarcar" onclick="cerrarModal('modalMarcar',event)">
-  <div class="modal" onclick="e=>e.stopPropagation()">
-    <h3>Marcar horario</h3>
-    <div class="slot-badge" id="marcarBadge"></div>
-    <div class="form-group">
-      <label>Nombre del alumno</label>
-      <input type="text" id="marcarNombre" placeholder="Ej: Juan García" maxlength="40">
-    </div>
-    <div class="form-group">
-      <label>Tipo de clase</label>
-      <div style="display:flex;gap:10px;margin-top:6px;">
-        <label style="flex:1;display:flex;align-items:center;gap:8px;background:var(--fondo3);border:1px solid var(--borde);border-radius:10px;padding:12px;cursor:pointer;">
-          <input type="radio" name="marcarTipo" value="puntual" checked style="accent-color:var(--verde);"> Clase puntual
-        </label>
-        <label style="flex:1;display:flex;align-items:center;gap:8px;background:var(--fondo3);border:1px solid var(--borde);border-radius:10px;padding:12px;cursor:pointer;">
-          <input type="radio" name="marcarTipo" value="fijo" style="accent-color:var(--verde);"> Alumno fijo
-        </label>
-      </div>
-      <p style="font-size:.72rem;color:var(--texto-suave);margin-top:8px;" id="marcarTipoHint">Solo ocupa esta fecha.</p>
-    </div>
-    <div class="modal-actions">
-      <button class="btn btn-secondary" onclick="cerrarModal('modalMarcar')">Cancelar</button>
-      <button class="btn btn-primary"   onclick="confirmarMarcar()">Confirmar</button>
-    </div>
-  </div>
-</div>
-
-<!-- ── MODAL: VER SLOT OCUPADO (ADMIN) ── -->
-<div class="overlay hidden" id="modalVerOcupado" onclick="cerrarModal('modalVerOcupado',event)">
-  <div class="modal" onclick="e=>e.stopPropagation()">
-    <h3>Slot ocupado</h3>
-    <div class="slot-badge" id="verOcupBadge"></div>
-    <p id="verOcupInfo" style="font-size:.88rem;color:var(--texto-suave);margin:12px 0;"></p>
-    <div class="modal-actions">
-      <button class="btn btn-secondary" onclick="cerrarModal('modalVerOcupado')">Cerrar</button>
-      <button class="btn btn-danger"    onclick="liberarSlotAdmin()">Liberar horario</button>
-    </div>
-  </div>
-</div>
-
-<!-- ── MODAL: SOLICITUDES PENDIENTES (ADMIN) ── -->
-<div class="overlay hidden" id="modalPendientes" onclick="cerrarModal('modalPendientes',event)">
-  <div class="modal" style="max-width:520px;" onclick="e=>e.stopPropagation()">
-    <h3>Solicitudes pendientes</h3>
-    <div id="pendList" style="margin-top:14px;display:flex;flex-direction:column;gap:10px;max-height:60vh;overflow-y:auto;"></div>
-    <div class="modal-actions" style="margin-top:16px;">
-      <button class="btn btn-secondary" onclick="cerrarModal('modalPendientes')">Cerrar</button>
-    </div>
-  </div>
-</div>
-
 <!-- ── MODAL: ADMIN LOGIN ── -->
 <div class="overlay hidden" id="modalAdmin" onclick="cerrarModal('modalAdmin',event)">
   <div class="modal" onclick="e=>e.stopPropagation()">
@@ -590,23 +513,6 @@
   </div>
 </div>
 
-<!-- ── MODAL: CONFIG ADMIN ── -->
-<div class="overlay hidden" id="modalConfig" onclick="cerrarModal('modalConfig',event)">
-  <div class="modal" onclick="e=>e.stopPropagation()">
-    <h3>Configuración</h3>
-    <div class="form-group"><label>Número de WhatsApp (sin +)</label>
-      <input type="tel" id="cfgWA" placeholder="Ej: 5491123456789"></div>
-    <div class="form-group"><label>Precio por clase</label>
-      <input type="text" id="cfgPrecio" placeholder="Ej: $45.000"></div>
-    <div class="form-group"><label>Nueva contraseña de admin</label>
-      <input type="password" id="cfgPass" placeholder="Dejar vacío para no cambiar"></div>
-    <div class="modal-actions">
-      <button class="btn btn-secondary" onclick="cerrarModal('modalConfig')">Cancelar</button>
-      <button class="btn btn-primary" onclick="guardarConfig()">Guardar</button>
-    </div>
-  </div>
-</div>
-
 <!-- ── FLOATING WA ── -->
 <button class="float-wa" onclick="contactarWA()" title="Contactar por WhatsApp">
   <svg width="26" height="26" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
@@ -615,7 +521,6 @@
 <!-- ── FOOTER ── -->
 <footer>
   <p>© 2025 Rodrigo Gilabert — Tenis de Mesa</p>
-  <p style="margin-top:6px;"><span class="footer-trigger" id="footerTrigger">·····</span></p>
 </footer>
 
 <div class="toast" id="toast"></div>
@@ -666,7 +571,6 @@ const SIEMPRE_OCUPADO = [
   { dia: 0, slot: 0 },  // Lunes 9:00
   { dia: 5, slot: 3 },  // Sábado 12:00
 ];
-let adminMode = false;
 let semanaOff = 0;
 
 // Slot seleccionado para postularse
@@ -760,7 +664,7 @@ function renderCalendario() {
       const fijoKey = di + '_' + s;
       const ocup  = !!ocupados[sk] || !!fijos[fijoKey] || SIEMPRE_OCUPADO.some(x => x.dia === di && x.slot === s);
       const pend  = !ocup && !!pendientes[sk];
-      const bloq = !ocup && !pend && !adminMode && esBloqueado(di, s);
+      const bloq = !ocup && !pend && esBloqueado(di, s);
       cell.className = 'cal-cell ' + (ocup ? 'ocupado' : pend ? 'pendiente' : bloq ? 'bloqueado' : 'libre');
       // Tooltip con nombre en slots ocupados (admin)
       const infoOcup = fijos[fijoKey] ? fijos[fijoKey] : (ocupados[sk] && typeof ocupados[sk]==='object' ? ocupados[sk] : null);
@@ -769,10 +673,7 @@ function renderCalendario() {
       cell.dataset.slot  = s;
       cell.dataset.dia   = di;
 
-      if (adminMode) {
-        if (ocup) cell.onclick = () => adminVerOcupado(fk, s, di, cell);
-        else      cell.onclick = () => adminMarcarSlot(fk, s, di, fecha);
-      } else if (!ocup && !pend && !bloq) {
+      if (!ocup && !pend && !bloq) {
         cell.onclick = () => abrirPostula(fk, s, fecha, di);
       }
 
@@ -850,142 +751,6 @@ function actualizarDireccion() {
   } else {
     box.style.display = 'none';
   }
-}
-
-// ─── ADMIN: TOGGLE SLOT ───────────────────────────────────────────
-// ─── ADMIN: MARCAR SLOT ──────────────────────────────────────────
-let adminSlotSel = null;
-
-function adminMarcarSlot(fecha, slot, dia, dateObj) {
-  adminSlotSel = { fecha, slot, dia };
-  const horaStr  = slotAHora(slot);
-  const fechaStr = dateObj.toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'});
-  document.getElementById('marcarBadge').innerHTML = `<strong>${fechaStr.charAt(0).toUpperCase()+fechaStr.slice(1)}</strong> — ${horaStr} hs`;
-  document.getElementById('marcarNombre').value = '';
-  document.querySelector('input[name="marcarTipo"][value="puntual"]').checked = true;
-  document.getElementById('marcarTipoHint').textContent = 'Solo ocupa esta fecha.';
-  // Listener hint dinámico
-  document.querySelectorAll('input[name="marcarTipo"]').forEach(r => {
-    r.onchange = () => {
-      document.getElementById('marcarTipoHint').textContent =
-        r.value === 'fijo' ? 'Ocupa este horario todas las semanas.' : 'Solo ocupa esta fecha.';
-    };
-  });
-  abrirModal('modalMarcar');
-  setTimeout(() => document.getElementById('marcarNombre').focus(), 100);
-}
-
-function confirmarMarcar() {
-  const nombre = document.getElementById('marcarNombre').value.trim();
-  const tipo   = document.querySelector('input[name="marcarTipo"]:checked').value;
-  if (!adminSlotSel) return;
-  const { fecha, slot, dia } = adminSlotSel;
-  const sk = slotKey(fecha, slot);
-  const fk = dia + '_' + slot;
-  if (tipo === 'fijo') {
-    fijos[fk] = { nombre: nombre || 'Alumno fijo' };
-    guardarFij();
-  } else {
-    ocupados[sk] = { nombre: nombre || 'Clase' };
-    guardarOcu();
-  }
-  cerrarModal('modalMarcar');
-  renderCalendario();
-  toast(tipo === 'fijo' ? 'Alumno fijo registrado' : 'Clase marcada');
-}
-
-function adminVerOcupado(fecha, slot, dia, cell) {
-  adminSlotSel = { fecha, slot, dia };
-  const sk = slotKey(fecha, slot);
-  const fk = dia + '_' + slot;
-  const horaStr = slotAHora(slot);
-  const isFijo  = !!fijos[fk];
-  const info    = isFijo ? fijos[fk] : (typeof ocupados[sk] === 'object' ? ocupados[sk] : null);
-  const nombre  = info?.nombre || '—';
-  document.getElementById('verOcupBadge').innerHTML = `<strong>${horaStr} hs</strong>`;
-  document.getElementById('verOcupInfo').innerHTML =
-    `Alumno: <strong>${nombre}</strong><br>Tipo: <strong>${isFijo ? 'Fijo (todas las semanas)' : 'Puntual'}</strong>`;
-  abrirModal('modalVerOcupado');
-}
-
-function liberarSlotAdmin() {
-  if (!adminSlotSel) return;
-  const { fecha, slot, dia } = adminSlotSel;
-  const sk = slotKey(fecha, slot);
-  const fk = dia + '_' + slot;
-  delete ocupados[sk];
-  delete fijos[fk];
-  guardarOcu(); guardarFij();
-  cerrarModal('modalVerOcupado');
-  renderCalendario();
-  toast('Horario liberado');
-}
-
-// ─── ADMIN: SOLICITUDES PENDIENTES ──────────────────────────────
-function actualizarBadgePendientes() {
-  const count = Object.keys(pendientes).length;
-  const badge = document.getElementById('pendBadge');
-  if (!badge) return;
-  badge.textContent = count;
-  badge.style.display = count > 0 ? 'inline-flex' : 'none';
-}
-
-function abrirPendientes() {
-  const list = document.getElementById('pendList');
-  const pens = Object.entries(pendientes);
-  if (pens.length === 0) {
-    list.innerHTML = '<p style="color:var(--texto-suave);font-size:.85rem;">No hay solicitudes pendientes.</p>';
-  } else {
-    list.innerHTML = pens.map(([sk, p]) => {
-      const hora = slotAHora(p.slot);
-      const fecha = new Date(p.fecha + 'T00:00:00').toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'});
-      return `<div style="background:var(--fondo3);border:1px solid var(--borde);border-radius:10px;padding:14px;">
-        <div style="font-weight:700;margin-bottom:4px;">${p.nombre}</div>
-        <div style="font-size:.78rem;color:var(--texto-suave);margin-bottom:8px;">
-          ${fecha.charAt(0).toUpperCase()+fecha.slice(1)} — ${hora} hs<br>
-          Sede: ${p.sede} &nbsp;·&nbsp; Nivel: ${p.nivel}<br>
-          WA: +54 9 ${p.wa}${p.nota ? '<br>Nota: '+p.nota : ''}
-        </div>
-        <div style="display:flex;gap:8px;">
-          <button class="btn btn-danger" style="font-size:.75rem;padding:5px 12px;" onclick="rechazarSolicitud('${sk}')">Rechazar</button>
-          <button class="btn btn-secondary" style="font-size:.75rem;padding:5px 12px;" onclick="aprobarComoFijo('${sk}')">Confirmar fijo</button>
-          <button class="btn btn-primary" style="font-size:.75rem;padding:5px 12px;" onclick="aprobarSolicitud('${sk}')">Confirmar</button>
-        </div>
-      </div>`;
-    }).join('');
-  }
-  abrirModal('modalPendientes');
-}
-
-function aprobarSolicitud(sk) {
-  if (!pendientes[sk]) return;
-  const p = pendientes[sk];
-  ocupados[sk] = { nombre: p.nombre };
-  delete pendientes[sk];
-  guardarOcu(); guardarPen();
-  abrirPendientes(); renderCalendario();
-  actualizarBadgePendientes();
-  toast('Clase confirmada');
-}
-
-function aprobarComoFijo(sk) {
-  if (!pendientes[sk]) return;
-  const p = pendientes[sk];
-  const fk = p.dia + '_' + p.slot;
-  fijos[fk] = { nombre: p.nombre };
-  delete pendientes[sk];
-  guardarFij(); guardarPen();
-  abrirPendientes(); renderCalendario();
-  actualizarBadgePendientes();
-  toast('Alumno fijo registrado');
-}
-
-function rechazarSolicitud(sk) {
-  delete pendientes[sk];
-  guardarPen();
-  abrirPendientes(); renderCalendario();
-  actualizarBadgePendientes();
-  toast('Solicitud rechazada');
 }
 
 // ─── MODAL: POSTULARSE ────────────────────────────────────────────
@@ -1091,7 +856,6 @@ function contactarWA() {
 
 // ─── ADMIN ────────────────────────────────────────────────────────
 let brandClicks = 0, brandTimer = null;
-let footerClicks = 0, footerTimer = null;
 
 document.getElementById('brandClick').addEventListener('click', () => {
   brandClicks++;
@@ -1100,15 +864,7 @@ document.getElementById('brandClick').addEventListener('click', () => {
   if (brandClicks >= 5) { brandClicks = 0; pedirPasswordAdmin(); }
 });
 
-document.getElementById('footerTrigger').addEventListener('click', () => {
-  footerClicks++;
-  clearTimeout(footerTimer);
-  footerTimer = setTimeout(() => footerClicks = 0, 1500);
-  if (footerClicks >= 5) { footerClicks = 0; pedirPasswordAdmin(); }
-});
-
 function pedirPasswordAdmin() {
-  if (adminMode) { salirAdmin(); return; }
   document.getElementById('adminPass').value = '';
   abrirModal('modalAdmin');
   setTimeout(() => document.getElementById('adminPass').focus(), 100);
@@ -1117,50 +873,13 @@ function pedirPasswordAdmin() {
 function loginAdmin() {
   const pass = document.getElementById('adminPass').value;
   if (pass === cfg.password) {
-    adminMode = true;
     cerrarModal('modalAdmin');
-    document.getElementById('adminBar').classList.remove('hidden');
-    document.getElementById('calBody').classList.add('admin-mode');
-    actualizarBadgePendientes();
-    renderCalendario();
     toast('Modo admin activado');
   } else {
     toast('Contraseña incorrecta');
     document.getElementById('adminPass').value = '';
     document.getElementById('adminPass').focus();
   }
-}
-
-function salirAdmin() {
-  adminMode = false;
-  sessionStorage.removeItem('rg_admin_auth');
-  sessionStorage.removeItem('rg_admin_user');
-  document.getElementById('adminBar').classList.add('hidden');
-  document.getElementById('calBody').classList.remove('admin-mode');
-  renderCalendario();
-  toast('Sesión cerrada');
-}
-
-function abrirConfigAdmin() {
-  document.getElementById('cfgWA').value     = cfg.wa;
-  document.getElementById('cfgPrecio').value = cfg.precio;
-  document.getElementById('cfgBio').value    = cfg.bio;
-  document.getElementById('cfgAlumnos').value  = cfg.alumnos;
-  document.getElementById('cfgPass').value     = '';
-  abrirModal('modalConfig');
-}
-
-function guardarConfig() {
-  cfg.wa     = document.getElementById('cfgWA').value.trim().replace(/\D/g,'');
-  cfg.precio = document.getElementById('cfgPrecio').value.trim();
-  cfg.bio    = document.getElementById('cfgBio').value.trim();
-  cfg.alumnos   = document.getElementById('cfgAlumnos').value.trim();
-  const np      = document.getElementById('cfgPass').value.trim();
-  if (np) cfg.password = np;
-  guardarCfg();
-  renderInfo();
-  cerrarModal('modalConfig');
-  toast('Configuración guardada ✓');
 }
 
 // ─── HELPERS MODALES ──────────────────────────────────────────────
@@ -1197,48 +916,9 @@ function cerrarModal(id, e) {
 }
 
 // ─── INIT ─────────────────────────────────────────────────────────
-function procesarAccionURL() {
-  const params = new URLSearchParams(window.location.search);
-  const accion = params.get('accion');
-  const sk     = params.get('sk');
-  if (!accion || !sk) return;
-
-  // Limpiar URL sin recargar
-  window.history.replaceState({}, '', window.location.pathname);
-
-  if (accion === 'aprobar' && pendientes[sk]) {
-    ocupados[sk] = true;
-    delete pendientes[sk];
-    guardarOcu(); guardarPen();
-    renderCalendario();
-    toast('Clase confirmada y horario marcado como ocupado');
-  } else if (accion === 'rechazar' && pendientes[sk]) {
-    delete pendientes[sk];
-    guardarPen();
-    renderCalendario();
-    toast('Solicitud rechazada, horario liberado');
-  }
-}
-
 function init() {
-  // Auto-entrar a admin si viene de /admin con sesión válida
-  if (new URLSearchParams(window.location.search).get('admin') === '1'
-      && sessionStorage.getItem('rg_admin_auth') === '1') {
-    window.history.replaceState({}, '', window.location.pathname);
-    adminMode = true;
-    document.getElementById('adminBar').classList.remove('hidden');
-    document.getElementById('calBody').classList.add('admin-mode');
-    const user = sessionStorage.getItem('rg_admin_user') || 'admin';
-    setTimeout(() => toast('Bienvenido, ' + user), 400);
-    setTimeout(() => {
-      actualizarBadgePendientes();
-      document.getElementById('calSection').scrollIntoView({behavior:'smooth'});
-    }, 300);
-  }
   renderInfo();
-  procesarAccionURL();
   renderCalendario();
-  setInterval(() => { if (semanaOff === 0) renderCalendario(); }, 60000);
 
   // Re-render al resize (solo si cambia el ancho, ignora cambios de altura por toolbar mobile)
   let resizeTimer;
