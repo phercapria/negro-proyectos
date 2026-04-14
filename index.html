@@ -615,7 +615,7 @@ const TOTAL_SLOTS = (MIN_FIN - MIN_INI) / 30; // 20 slots de 30 min
 
 const DEFAULT_CFG = {
   wa:       '5491154811624',
-  precio:   '$15.000',
+  precio:   '$45.000',
   bio:      'Profesor profesional de tenis de mesa con más de 10 años de experiencia. Clases individuales para todos los niveles, desde principiantes hasta competidores.',
   alumnos:  '24',
   password: 'rodrigo2024',
@@ -962,15 +962,14 @@ function abrirPostula(fecha, slot, dateObj, diaIdx) {
   const horaStr = slotAHora(slot);
   const fechaStr = dateObj.toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'});
   document.getElementById('slotBadge').innerHTML =
-    `<strong>📅 ${fechaStr.charAt(0).toUpperCase()+fechaStr.slice(1)}</strong><br>🕐 ${horaStr} hs`;
+    `<strong>${fechaStr.charAt(0).toUpperCase()+fechaStr.slice(1)}</strong><br>${horaStr} hs`;
   document.getElementById('postNombre').value = '';
   document.getElementById('postWA').value     = '';
   document.getElementById('postNota').value   = '';
-  // Update duration options with prices from config
+  // Update duration option with price from config
   const p1 = parsePrecioNum(cfg.precio);
   const sel = document.getElementById('postDuracion');
   sel.options[0].text = p1 ? `1 hora (${formatPrecio(p1)})` : '1 hora';
-  sel.options[1].text = p1 ? `2 horas (${formatPrecio(p1 * 2)})` : '2 horas';
   abrirModal('modalPostula');
 }
 
@@ -990,15 +989,15 @@ function enviarSolicitud() {
   const fechaStr = slotSel.fecha_obj.toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'});
 
   const msg = [
-    `¡Hola Rodrigo! 👋 Me gustaría tomar clases de tenis de mesa.`,
+    `Hola Rodrigo, me gustaría tomar clases de tenis de mesa.`,
     ``,
-    `📅 *Horario solicitado:* ${fechaStr.charAt(0).toUpperCase()+fechaStr.slice(1)}, ${horaIni} – ${horaFin} hs`,
-    `📍 *Sede preferida:* ${sede}`,
-    `🏓 *Mi nivel:* ${nivel}`,
-    `📱 *Mi WhatsApp:* +54 9 ${waNum}`,
-    nota ? `📝 *Nota:* ${nota}` : null,
+    `*Horario solicitado:* ${fechaStr.charAt(0).toUpperCase()+fechaStr.slice(1)}, ${horaIni} – ${horaFin} hs`,
+    `*Sede preferida:* ${sede}`,
+    `*Mi nivel:* ${nivel}`,
+    `*Mi WhatsApp:* +54 9 ${waNum}`,
+    nota ? `*Nota:* ${nota}` : null,
     ``,
-    `¡Quedo a tu disposición para coordinar! 🙌`
+    `Quedo a tu disposicion para coordinar.`
   ].filter(l => l !== null).join('\n');
 
   const url = `https://wa.me/${cfg.wa}?text=${encodeURIComponent(msg)}`;
@@ -1021,7 +1020,7 @@ function enviarSolicitud() {
 
 // ─── WA FLOTANTE ─────────────────────────────────────────────────
 function contactarWA() {
-  const msg = `¡Hola Rodrigo! Me gustaría consultar sobre las clases de tenis de mesa. 🏓`;
+  const msg = `Hola Rodrigo, me gustaria consultar sobre las clases de tenis de mesa.`;
   window.open(`https://wa.me/${cfg.wa}?text=${encodeURIComponent(msg)}`, '_blank');
 }
 
@@ -1115,7 +1114,7 @@ function cerrarModal(id, e) {
           <div class="form-group"><label>Tu nombre completo *</label><input type="text" id="postNombre" placeholder="Ej: Juan García" maxlength="40"></div>
           <div class="form-group"><label>Tu número de WhatsApp *</label><input type="tel" id="postWA" placeholder="Ej: 1134567890 (sin 0 ni 15)" maxlength="20"></div>
           <div class="form-group"><label>Sede preferida</label><select id="postSede"><option value="King Pong (Luis Viale 526)">King Pong — Luis Viale 526</option><option value="Yabrudense (Alberti 1541)">Yabrudense — Alberti 1541</option><option value="Sin preferencia">Sin preferencia / cualquiera</option></select></div>
-          <div class="form-group"><label>Duración deseada</label><select id="postDuracion"><option value="1">1 hora</option><option value="2">2 horas</option></select></div>
+          <div class="form-group"><label>Duración deseada</label><select id="postDuracion"><option value="1">1 hora</option></select></div>
           <div class="form-group"><label>¿Cuál es tu nivel?</label><select id="postNivel"><option value="Principiante">Principiante</option><option value="Intermedio">Intermedio</option><option value="Avanzado">Avanzado</option></select></div>
           <div class="form-group"><label>Mensaje adicional (opcional)</label><textarea id="postNota" rows="2" placeholder="Contame algo sobre vos o tus objetivos..."></textarea></div>
           <div class="modal-actions">
