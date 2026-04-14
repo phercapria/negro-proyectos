@@ -120,9 +120,9 @@
     .wk-cell.fijo { background:rgba(255,45,32,.32); }
     .wk-cell.pend { background:rgba(255,180,0,.14); }
     .wk-cell.bloq { background:rgba(255,180,0,.07); cursor:default; }
-    .wk-name { font-size:.56rem; font-weight:700; color:rgba(255,255,255,.85); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:1.2; }
-    .wk-name.pend-name { color:rgba(255,180,0,.9); }
-    .wk-name.fijo-name { color:rgba(255,120,100,.9); }
+    .wk-name { font-size:.68rem; font-weight:700; color:rgba(255,255,255,.9); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:1.2; }
+    .wk-name.pend-name { color:rgba(255,200,0,.95); }
+    .wk-name.fijo-name { color:rgba(255,130,110,.95); }
     .month-grid-wrap { padding:0 14px 20px; }
     .month-hdr { display:grid; grid-template-columns:repeat(7,1fr); margin-bottom:4px; }
     .month-dname { text-align:center; font-size:.62rem; color:var(--suave); font-weight:700; padding:4px 0; }
@@ -215,6 +215,18 @@
     /* ── TOAST ── */
     .toast { position:fixed; bottom:80px; left:50%; transform:translateX(-50%); background:#1e1e1e; border:1px solid #333; border-radius:30px; padding:10px 22px; font-size:.82rem; font-weight:600; white-space:nowrap; z-index:999; pointer-events:none; opacity:0; transition:opacity .2s; }
     .toast.show { opacity:1; }
+
+    /* ── CONFIRM MODAL ── */
+    .cfm-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.75); z-index:600; align-items:center; justify-content:center; padding:20px; }
+    .cfm-overlay.open { display:flex; }
+    .cfm-box { background:#1c1c1c; border:1px solid #2e2e2e; border-radius:18px; padding:24px 20px 20px; max-width:340px; width:100%; }
+    .cfm-title { font-size:.78rem; font-weight:700; color:var(--suave); text-transform:uppercase; letter-spacing:.06em; margin-bottom:12px; }
+    .cfm-msg { font-size:.92rem; line-height:1.65; white-space:pre-line; color:var(--texto); margin-bottom:22px; }
+    .cfm-btns { display:flex; gap:10px; }
+    .cfm-cancel { flex:1; padding:13px; border-radius:10px; border:1px solid #333; background:#222; color:#999; font-size:.88rem; font-weight:700; cursor:pointer; font-family:inherit; transition:border-color .15s; }
+    .cfm-cancel:hover { border-color:#555; color:#ccc; }
+    .cfm-ok { flex:1; padding:13px; border-radius:10px; border:none; font-size:.88rem; font-weight:700; cursor:pointer; font-family:inherit; transition:opacity .15s; }
+    .cfm-ok:hover { opacity:.88; }
 
     @media(min-width:640px) {
       .home-cards { flex-direction:row; flex-wrap:wrap; }
@@ -456,6 +468,18 @@
   </div>
 </div>
 
+<!-- CONFIRM MODAL -->
+<div class="cfm-overlay" id="cfmOverlay">
+  <div class="cfm-box">
+    <div class="cfm-title" id="cfmTitle"></div>
+    <div class="cfm-msg" id="cfmMsg"></div>
+    <div class="cfm-btns">
+      <button class="cfm-cancel" onclick="cfmResolve(false)">Cancelar</button>
+      <button class="cfm-ok" id="cfmOkBtn" onclick="cfmResolve(true)">Confirmar</button>
+    </div>
+  </div>
+</div>
+
 <!-- BOTTOM NAV -->
 <nav class="bottom-nav">
   <button class="bnav-btn active" id="bn-home" onclick="ir('home')">
@@ -673,7 +697,35 @@ function guardarClase() {
   const di     = diIdx(selDate);
   const nombre = document.getElementById('inpNombre').value.trim() || null;
   const sede   = document.getElementById('inpSede').value || null;
-  const info   = { nombre: nombre||null, sede: sede||null };
+
+  // Armar resumen para el cuadro de confirmación
+  const fechaFmt = selDate.toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'}).replace(/^\w/,c=>c.toUpperCase());
+  let resumen = [];
+  if (tipoClase === 'fijo') {
+    const rep = document.querySelector('input[name="fijoRep"]:checked').value;
+    if (rep === 'dia') {
+      resumen.push('Tipo: Alumno fijo — todos los ' + DIAS_L[di]);
+    } else {
+      const checks = document.querySelectorAll('#diasCustom input[type="checkbox"]:checked');
+      const dias = Array.from(checks).map(cb=>DIAS_L[parseInt(cb.value)]).join(', ');
+      resumen.push('Tipo: Alumno fijo — ' + (dias||'días seleccionados'));
+    }
+  } else {
+    resumen.push('Tipo: Clase puntual');
+    resumen.push('Fecha: ' + fechaFmt);
+  }
+  resumen.push('Horario: ' + hora(selSlot) + ' hs');
+  if (sede) resumen.push('Sede: ' + sede);
+  if (nombre) resumen.push('Alumno: ' + nombre);
+
+  showConfirm('Confirmar clase', resumen.join('\n'), _doGuardarClase, { okLabel:'Guardar clase', okBg:'var(--verde)', okColor:'#000' });
+}
+
+function _doGuardarClase() {
+  const fk     = fkey(selDate);
+  const di     = diIdx(selDate);
+  const nombre = document.getElementById('inpNombre').value.trim() || null;
+  const sede   = document.getElementById('inpSede').value || null;
 
   if (tipoClase === 'fijo') {
     const rep = document.querySelector('input[name="fijoRep"]:checked').value;
@@ -759,23 +811,41 @@ function renderDia() {
     else if (bloq) { cls+='bloq'; label='Bloqueado'; }
     else           { cls+='libre'; label='+ Marcar'; }
     div.className=cls;
-    div.innerHTML=`<span class="hora">${hora(s)}</span><span class="estado">${label}${sub?'<span style="font-size:.68rem;color:#666;margin-left:8px;">'+sub+'</span>':''}</span>`;
+    div.innerHTML=`<span class="hora">${hora(s)}</span><span class="estado">${label}${sub?'<span style="font-size:.72rem;color:#666;margin-left:8px;">'+sub+'</span>':''}</span>`;
     if (!ocu&&!pend&&!bloq) {
-      div.onclick=()=>{ ocupados[sk(fk,s)]={nombre:null,sede:null}; saveOcu(); renderDia(); toast('Marcado'); };
+      div.onclick=()=>{
+        showConfirm('Cargar clase', `Horario: ${hora(s)} hs\nFecha: ${document.getElementById('diaLabel').textContent}`, ()=>{
+          ocupados[sk(fk,s)]={nombre:null,sede:null}; saveOcu(); renderDia(); toast('Marcado');
+        }, { okLabel:'Cargar', okBg:'var(--verde)', okColor:'#000' });
+      };
     } else if (fij) {
       const del=document.createElement('button');
       del.className='dslot-del'; del.textContent='×'; del.title='Eliminar fijo';
-      del.onclick=e=>{ e.stopPropagation(); delete fijos[di+'_'+s]; saveFij(); renderDia(); toast('Fijo eliminado'); };
+      del.onclick=e=>{ e.stopPropagation();
+        showConfirm('Eliminar clase fija', `Alumno: ${fij.nombre||'—'}\nHorario: ${hora(s)} hs${fij.sede?'\nSede: '+fij.sede:''}`, ()=>{
+          delete fijos[di+'_'+s]; saveFij(); renderDia(); toast('Fijo eliminado');
+        }, { okLabel:'Eliminar', okBg:'var(--rojo)', okColor:'#fff' });
+      };
       div.appendChild(del);
     } else if (!esSiempre&&ocu) {
       const del=document.createElement('button');
-      del.className='dslot-del'; del.textContent='×'; del.title='Liberar';
-      del.onclick=e=>{ e.stopPropagation(); delete ocupados[sk(fk,s)]; saveOcu(); renderDia(); toast('Liberado'); };
+      del.className='dslot-del'; del.textContent='×'; del.title='Liberar horario';
+      del.onclick=e=>{ e.stopPropagation();
+        const nom=(ocuV&&ocuV.nombre)||'Horario ocupado';
+        showConfirm('Liberar horario', `${nom}\n${hora(s)} hs — ${document.getElementById('diaLabel').textContent}`, ()=>{
+          delete ocupados[sk(fk,s)]; saveOcu(); renderDia(); toast('Liberado');
+        }, { okLabel:'Liberar', okBg:'var(--rojo)', okColor:'#fff' });
+      };
       div.appendChild(del);
     } else if (pend) {
       const del=document.createElement('button');
       del.className='dslot-del'; del.textContent='×'; del.title='Cancelar solicitud';
-      del.onclick=e=>{ e.stopPropagation(); delete pendientes[sk(fk,s)]; savePen(); renderDia(); renderHome(); toast('Solicitud cancelada'); };
+      del.onclick=e=>{ e.stopPropagation();
+        const pendV=pendientes[sk(fk,s)];
+        showConfirm('Cancelar solicitud', `Alumno: ${pendV&&pendV.nombre||'—'}\nHorario: ${hora(s)} hs`, ()=>{
+          delete pendientes[sk(fk,s)]; savePen(); renderDia(); renderHome(); toast('Solicitud cancelada');
+        }, { okLabel:'Cancelar solicitud', okBg:'var(--rojo)', okColor:'#fff' });
+      };
       div.appendChild(del);
     }
     cont.appendChild(div);
@@ -821,19 +891,32 @@ function renderSemana() {
         const n=document.createElement('div'); n.className='wk-name pend-name'; n.textContent=pendV.nombre; cell.appendChild(n);
         cell.title=pendV.nombre+' (pendiente)';
       }
+      const diaFmt = fecha.toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'}).replace(/^\w/,c=>c.toUpperCase());
       if (!ocu&&!pend&&!bloq) {
-        cell.title='Tocar para marcar ocupado';
-        cell.onclick=()=>{ ocupados[sk(fk,s)]={nombre:null,sede:null}; saveOcu(); renderSemana(); toast('Marcado'); };
+        cell.onclick=()=>{
+          showConfirm('Cargar clase', `Horario: ${hora(s)} hs\nFecha: ${diaFmt}`, ()=>{
+            ocupados[sk(fk,s)]={nombre:null,sede:null}; saveOcu(); renderSemana(); toast('Marcado');
+          }, { okLabel:'Cargar', okBg:'var(--verde)', okColor:'#000' });
+        };
       } else if (fij) {
-        cell.title=(cell.title?cell.title+'\n':'')+'Tocar para eliminar fijo';
-        cell.style.cursor='pointer';
-        cell.onclick=()=>{ if(confirm('Eliminar clase fija de '+(fij.nombre||'este slot')+'?')){ delete fijos[di+'_'+s]; saveFij(); renderSemana(); toast('Fijo eliminado'); }};
+        cell.onclick=()=>{
+          showConfirm('Eliminar clase fija', `Alumno: ${fij.nombre||'—'}\nHorario: ${hora(s)} hs${fij.sede?'\nSede: '+fij.sede:''}`, ()=>{
+            delete fijos[di+'_'+s]; saveFij(); renderSemana(); toast('Fijo eliminado');
+          }, { okLabel:'Eliminar', okBg:'var(--rojo)', okColor:'#fff' });
+        };
       } else if (ocu) {
-        cell.title=(cell.title?cell.title+'\n':'')+'Tocar para liberar';
-        cell.onclick=()=>{ delete ocupados[sk(fk,s)]; saveOcu(); renderSemana(); toast('Liberado'); };
+        cell.onclick=()=>{
+          const nom=(ocuV&&ocuV.nombre)||'Horario ocupado';
+          showConfirm('Liberar horario', `${nom}\n${hora(s)} hs — ${diaFmt}`, ()=>{
+            delete ocupados[sk(fk,s)]; saveOcu(); renderSemana(); toast('Liberado');
+          }, { okLabel:'Liberar', okBg:'var(--rojo)', okColor:'#fff' });
+        };
       } else if (pend) {
-        cell.title=(cell.title?cell.title+'\n':'')+'Tocar para cancelar solicitud';
-        cell.onclick=()=>{ if(confirm('Cancelar solicitud de '+(pendV&&pendV.nombre||'este slot')+'?')){ delete pendientes[sk(fk,s)]; savePen(); renderSemana(); renderHome(); toast('Solicitud cancelada'); }};
+        cell.onclick=()=>{
+          showConfirm('Cancelar solicitud', `Alumno: ${pendV&&pendV.nombre||'—'}\nHorario: ${hora(s)} hs — ${diaFmt}`, ()=>{
+            delete pendientes[sk(fk,s)]; savePen(); renderSemana(); renderHome(); toast('Solicitud cancelada');
+          }, { okLabel:'Cancelar solicitud', okBg:'var(--rojo)', okColor:'#fff' });
+        };
       }
       row.appendChild(cell);
     });
@@ -1233,6 +1316,24 @@ function toast(msg) {
   const el=document.getElementById('toast');
   el.textContent=msg; el.classList.add('show');
   clearTimeout(toastTmr); toastTmr=setTimeout(()=>el.classList.remove('show'),2000);
+}
+
+// ── CONFIRM MODAL ─────────────────────────────────────────────────
+let _cfmCb = null;
+function showConfirm(title, msg, onOk, { okLabel='Confirmar', okBg='var(--verde)', okColor='#000' } = {}) {
+  document.getElementById('cfmTitle').textContent = title;
+  document.getElementById('cfmMsg').textContent   = msg;
+  const btn = document.getElementById('cfmOkBtn');
+  btn.textContent       = okLabel;
+  btn.style.background  = okBg;
+  btn.style.color       = okColor;
+  document.getElementById('cfmOverlay').classList.add('open');
+  _cfmCb = onOk;
+}
+function cfmResolve(ok) {
+  document.getElementById('cfmOverlay').classList.remove('open');
+  if (ok && _cfmCb) _cfmCb();
+  _cfmCb = null;
 }
 
 function actualizarDatos() {
