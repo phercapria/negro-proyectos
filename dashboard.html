@@ -335,11 +335,11 @@ document.getElementById('userChip').textContent = adminUser;
 document.getElementById('greetName').textContent = adminUser.charAt(0).toUpperCase() + adminUser.slice(1);
 
 // ── CONSTANTES ───────────────────────────────────────────────────
-const MIN_INI = 9*60, MIN_FIN = 19*60, TOTAL_SLOTS = (MIN_FIN-MIN_INI)/30;
+const MIN_INI = 9*60, MIN_FIN = 19*60, TOTAL_SLOTS = (MIN_FIN-MIN_INI)/60; // 10 slots de 1h
 const DIAS_S = ['Lun','Mar','Mie','Jue','Vie','Sab'];
 const DIAS_L = ['Lunes','Martes','Miercoles','Jueves','Viernes','Sabado'];
 const MESES  = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-const SIEMPRE = [{dia:0,slot:0},{dia:5,slot:5}];
+const SIEMPRE = [{dia:0,slot:0},{dia:5,slot:3}];
 
 // ── DATA ──────────────────────────────────────────────────────────
 let ocupados   = JSON.parse(localStorage.getItem('rg_ocu') || '{}');
@@ -356,7 +356,7 @@ function saveFranjas() { localStorage.setItem('rg_franjas', JSON.stringify(franj
 
 function fkey(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 function sk(f,s) { return `${f}_${s}`; }
-function hora(s) { const m=MIN_INI+s*30; return `${String(Math.floor(m/60)).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`; }
+function hora(s) { const m=MIN_INI+s*60; return `${String(Math.floor(m/60)).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`; }
 function diIdx(d) { return (d.getDay()+6)%7; }
 
 function esFranjaActiva() {
@@ -552,7 +552,7 @@ function renderSemana() {
   for (let s=0; s<TOTAL_SLOTS; s++) {
     const row=document.createElement('div'); row.className='wk-row';
     const tl=document.createElement('div'); tl.className='wk-time';
-    if (s%2===0) tl.textContent=hora(s); row.appendChild(tl);
+    tl.textContent=hora(s); row.appendChild(tl);
     fechas.forEach((fecha,di)=>{
       const fk=fkey(fecha), fij=fijos[di+'_'+s];
       const ocu=!!ocupados[sk(fk,s)]||!!fij||SIEMPRE.some(x=>x.dia===di&&x.slot===s);

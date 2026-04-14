@@ -82,7 +82,7 @@
     }
     .hero-content {
       position:relative; z-index:2;
-      padding:0 24px 64px;
+      padding:0 24px 124px;
       width:100%;
     }
     .hero-headline {
@@ -626,7 +626,7 @@ const DIAS    = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
 const DIAS_S  = ['Lun','Mar','Mié','Jue','Vie','Sáb'];
 const MIN_INI = 9*60;      // 9:00
 const MIN_FIN = 19*60;     // 19:00
-const TOTAL_SLOTS = (MIN_FIN - MIN_INI) / 30; // 20 slots de 30 min
+const TOTAL_SLOTS = (MIN_FIN - MIN_INI) / 60; // 10 slots de 1 hora
 
 const DEFAULT_CFG = {
   wa:       '5491154811624',
@@ -636,11 +636,19 @@ const DEFAULT_CFG = {
   password: 'rodrigo2024',
 };
 
+// ─── MIGRACIÓN: limpiar datos viejos al cambiar versión ──────────
+(function migrate() {
+  if (localStorage.getItem('rg_version') !== '2') {
+    ['rg_ocu','rg_pen','rg_fij','rg_franjas','rg_demo_init'].forEach(k => localStorage.removeItem(k));
+    localStorage.setItem('rg_version', '2');
+  }
+})();
+
 let cfg        = Object.assign({}, DEFAULT_CFG, JSON.parse(localStorage.getItem('rg_cfg') || '{}'));
-let ocupados   = JSON.parse(localStorage.getItem('rg_ocu') || '{}'); // { 'YYYY-MM-DD_slot': true }
-let pendientes = JSON.parse(localStorage.getItem('rg_pen') || '{}'); // { 'YYYY-MM-DD_slot': {id,nombre,wa,...} }
-let fijos      = JSON.parse(localStorage.getItem('rg_fij') || '{}'); // { 'dia_slot': {nombre} }
-let franjas    = JSON.parse(localStorage.getItem('rg_franjas') || '{}'); // { 'dia_slot': true }
+let ocupados   = JSON.parse(localStorage.getItem('rg_ocu') || '{}');
+let pendientes = JSON.parse(localStorage.getItem('rg_pen') || '{}');
+let fijos      = JSON.parse(localStorage.getItem('rg_fij') || '{}');
+let franjas    = JSON.parse(localStorage.getItem('rg_franjas') || '{}');
 function guardarPen() { localStorage.setItem('rg_pen', JSON.stringify(pendientes)); }
 function guardarFij() { localStorage.setItem('rg_fij', JSON.stringify(fijos)); }
 
@@ -650,44 +658,13 @@ function esBloqueado(di, s) {
   if (!tieneDia) return false;
   return !franjas[di + '_' + s];
 }
-
-// ─── DEMO: poblar slots ocupados si es primera visita ────────────
-(function initDemo() {
-  if (localStorage.getItem('rg_demo_init')) return;
-  // slot 0=9:00, 2=10:00, 4=11:00, 6=12:00, 8=13:00, 10=14:00, 12=15:00, 14=16:00, 16=17:00, 18=18:00
-  const slots = [
-    // Semana 14-19 abr
-    '2026-04-14_4','2026-04-14_10','2026-04-14_16',
-    '2026-04-15_2','2026-04-15_8','2026-04-15_12','2026-04-15_18',
-    '2026-04-16_1','2026-04-16_7','2026-04-16_15',
-    '2026-04-17_3','2026-04-17_11','2026-04-17_17',
-    '2026-04-18_2','2026-04-18_6','2026-04-18_14',
-    // Semana 20-25 abr
-    '2026-04-20_4','2026-04-20_12','2026-04-20_18',
-    '2026-04-21_1','2026-04-21_9','2026-04-21_16',
-    '2026-04-22_3','2026-04-22_7','2026-04-22_14',
-    '2026-04-23_0','2026-04-23_11','2026-04-23_17',
-    '2026-04-24_2','2026-04-24_8','2026-04-24_15',
-    '2026-04-25_4','2026-04-25_10',
-    // Semana 27 abr - 2 may
-    '2026-04-27_6','2026-04-27_16',
-    '2026-04-28_3','2026-04-28_13',
-    '2026-04-29_1','2026-04-29_11',
-    '2026-04-30_8','2026-04-30_18',
-    '2026-05-01_4','2026-05-01_15',
-    '2026-05-02_2','2026-05-02_12',
-  ];
-  slots.forEach(k => { ocupados[k] = true; });
-  localStorage.setItem('rg_ocu', JSON.stringify(ocupados));
-  localStorage.setItem('rg_demo_init', '1');
-})();
 let mobileDayStart = 0; // 0 = Lun-Mié, 3 = Jue-Sáb
 function esMobile() { return window.innerWidth <= 600; }
 
 // Slots siempre ocupados: { dia: 0=Lun…5=Sáb, slot: número }
 const SIEMPRE_OCUPADO = [
-  { dia: 0, slot: 0 },  // Lunes 9:30
-  { dia: 5, slot: 5 },  // Sábado 12:00
+  { dia: 0, slot: 0 },  // Lunes 9:00
+  { dia: 5, slot: 3 },  // Sábado 12:00
 ];
 let adminMode = false;
 let semanaOff = 0;
@@ -704,7 +681,7 @@ function toast(msg, dur=2600) {
 }
 
 function slotAHora(slot) {
-  const m = MIN_INI + slot * 30;
+  const m = MIN_INI + slot * 60;
   return `${String(Math.floor(m/60)).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`;
 }
 
@@ -772,7 +749,7 @@ function renderCalendario() {
     // Label hora (solo slots pares = hora en punto)
     const lbl = document.createElement('div');
     lbl.className = 'time-lbl';
-    if (s % 2 === 0) lbl.textContent = slotAHora(s);
+    lbl.textContent = slotAHora(s);
     row.appendChild(lbl);
 
     fechas.forEach((fecha, i) => {
@@ -1073,7 +1050,7 @@ function enviarSolicitud() {
   if (!waNum || waNum.length < 8) { toast('Por favor ingresá tu número de WhatsApp'); return; }
 
   const horaIni  = slotAHora(slotSel.slot);
-  const horaFin  = slotAHora(slotSel.slot + 2); // 1 hora = 2 slots
+  const horaFin  = slotAHora(slotSel.slot + 1); // 1 slot = 1 hora
   const fechaStr = slotSel.fecha_obj.toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'});
 
   const msg = [
