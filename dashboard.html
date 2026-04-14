@@ -310,9 +310,9 @@
     /* ── MAX-WIDTH EN PANTALLAS GRANDES ── */
     @media(min-width:900px) {
       html { background:#000b09; }
-      body { max-width:860px; margin:0 auto; box-shadow:0 0 0 1px #1a1a1a; min-height:100vh; }
-      .bottom-nav { width:860px; left:50%; transform:translateX(-50%); right:auto; }
-      .cfm-overlay { width:860px; left:50%; transform:translateX(-50%); right:auto; }
+      body { max-width:clamp(860px,78vw,1440px); margin:0 auto; box-shadow:0 0 0 1px #1a1a1a; min-height:100vh; }
+      .bottom-nav { width:clamp(860px,78vw,1440px); left:50%; transform:translateX(-50%); right:auto; }
+      .cfm-overlay { width:clamp(860px,78vw,1440px); left:50%; transform:translateX(-50%); right:auto; }
     }
   </style>
 </head>
