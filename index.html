@@ -386,15 +386,19 @@
     /* ── RESPONSIVE ──────────────────────────────────── */
     @media(max-width:767px) {
       .site-header { padding:18px 20px; }
-      .hero-headline { font-size:clamp(1.8rem,8vw,2.4rem); }
-      .btn-hero { padding:14px 28px; font-size:.92rem; }
-      .cal-section { padding:20px 0 48px; }
+      .cal-section { padding:16px 0 40px; }
       .cal-outer { padding:0 36px; }
       .week-arrow { width:34px; height:34px; }
       .week-arrow svg { width:14px; height:26px; }
 
-      /* Hero: zoom out — escalar por ancho para ver cara + hombros completos */
+      /* Hero mobile: más corto para que el calendario asome en el primer scroll */
+      .hero { height:62vh; min-height:360px; }
       .hero-img { background-size:100% auto; background-position:center 0%; }
+      .hero-content { padding:0 20px 24px; }
+      .hero-headline { font-size:clamp(1.55rem,6.5vw,2rem); margin-bottom:20px; }
+      .btn-hero { padding:13px 28px; font-size:.88rem; }
+      .hero-scroll { bottom:14px; }
+      .hero-scroll svg { width:36px; height:20px; }
 
       /* Calendario mobile: 3 días — FLEXBOX (más fiable en iOS Safari) */
       .cal-wrapper { overflow:hidden; }
