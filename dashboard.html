@@ -493,7 +493,7 @@ const MIN_INI = 9*60, MIN_FIN = 19*60, TOTAL_SLOTS = (MIN_FIN-MIN_INI)/60; // 10
 const DIAS_S = ['Lun','Mar','Mie','Jue','Vie','Sab'];
 const DIAS_L = ['Lunes','Martes','Miercoles','Jueves','Viernes','Sabado'];
 const MESES  = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-const SIEMPRE = [{dia:0,slot:0},{dia:5,slot:3}];
+const SIEMPRE = [];
 
 // ── DATA ──────────────────────────────────────────────────────────
 let ocupados   = JSON.parse(localStorage.getItem('rg_ocu') || '{}');
@@ -761,11 +761,21 @@ function renderDia() {
     div.className=cls;
     div.innerHTML=`<span class="hora">${hora(s)}</span><span class="estado">${label}${sub?'<span style="font-size:.68rem;color:#666;margin-left:8px;">'+sub+'</span>':''}</span>`;
     if (!ocu&&!pend&&!bloq) {
-      div.onclick=()=>{ ocupados[sk(fk,s)]=true; saveOcu(); renderDia(); toast('Marcado'); };
-    } else if (!esSiempre&&!fij&&ocu) {
+      div.onclick=()=>{ ocupados[sk(fk,s)]={nombre:null,sede:null}; saveOcu(); renderDia(); toast('Marcado'); };
+    } else if (fij) {
+      const del=document.createElement('button');
+      del.className='dslot-del'; del.textContent='×'; del.title='Eliminar fijo';
+      del.onclick=e=>{ e.stopPropagation(); delete fijos[di+'_'+s]; saveFij(); renderDia(); toast('Fijo eliminado'); };
+      div.appendChild(del);
+    } else if (!esSiempre&&ocu) {
       const del=document.createElement('button');
       del.className='dslot-del'; del.textContent='×'; del.title='Liberar';
       del.onclick=e=>{ e.stopPropagation(); delete ocupados[sk(fk,s)]; saveOcu(); renderDia(); toast('Liberado'); };
+      div.appendChild(del);
+    } else if (pend) {
+      const del=document.createElement('button');
+      del.className='dslot-del'; del.textContent='×'; del.title='Cancelar solicitud';
+      del.onclick=e=>{ e.stopPropagation(); delete pendientes[sk(fk,s)]; savePen(); renderDia(); renderHome(); toast('Solicitud cancelada'); };
       div.appendChild(del);
     }
     cont.appendChild(div);
@@ -811,12 +821,19 @@ function renderSemana() {
         const n=document.createElement('div'); n.className='wk-name pend-name'; n.textContent=pendV.nombre; cell.appendChild(n);
         cell.title=pendV.nombre+' (pendiente)';
       }
-      const esSiempre=SIEMPRE.some(x=>x.dia===di&&x.slot===s);
       if (!ocu&&!pend&&!bloq) {
-        cell.onclick=()=>{ ocupados[sk(fk,s)]=true; saveOcu(); renderSemana(); toast('Marcado'); };
-      } else if (!esSiempre&&!fij&&ocu) {
-        cell.title=(cell.title||'')+(cell.title?' · ':'')+' Toca para liberar';
+        cell.title='Tocar para marcar ocupado';
+        cell.onclick=()=>{ ocupados[sk(fk,s)]={nombre:null,sede:null}; saveOcu(); renderSemana(); toast('Marcado'); };
+      } else if (fij) {
+        cell.title=(cell.title?cell.title+'\n':'')+'Tocar para eliminar fijo';
+        cell.style.cursor='pointer';
+        cell.onclick=()=>{ if(confirm('Eliminar clase fija de '+(fij.nombre||'este slot')+'?')){ delete fijos[di+'_'+s]; saveFij(); renderSemana(); toast('Fijo eliminado'); }};
+      } else if (ocu) {
+        cell.title=(cell.title?cell.title+'\n':'')+'Tocar para liberar';
         cell.onclick=()=>{ delete ocupados[sk(fk,s)]; saveOcu(); renderSemana(); toast('Liberado'); };
+      } else if (pend) {
+        cell.title=(cell.title?cell.title+'\n':'')+'Tocar para cancelar solicitud';
+        cell.onclick=()=>{ if(confirm('Cancelar solicitud de '+(pendV&&pendV.nombre||'este slot')+'?')){ delete pendientes[sk(fk,s)]; savePen(); renderSemana(); renderHome(); toast('Solicitud cancelada'); }};
       }
       row.appendChild(cell);
     });

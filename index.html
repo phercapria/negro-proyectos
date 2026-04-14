@@ -568,11 +568,7 @@ function esBloqueado(di, s) {
 let mobileDayStart = 0; // 0 = Lun-Mié, 3 = Jue-Sáb
 function esMobile() { return window.innerWidth <= 600; }
 
-// Slots siempre ocupados: { dia: 0=Lun…5=Sáb, slot: número }
-const SIEMPRE_OCUPADO = [
-  { dia: 0, slot: 0 },  // Lunes 9:00
-  { dia: 5, slot: 3 },  // Sábado 12:00
-];
+const SIEMPRE_OCUPADO = [];
 let semanaOff = 0;
 
 // Slot seleccionado para postularse
