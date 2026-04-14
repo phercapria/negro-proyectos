@@ -577,18 +577,13 @@
 <!-- ── MODAL: CONFIG ADMIN ── -->
 <div class="overlay hidden" id="modalConfig" onclick="cerrarModal('modalConfig',event)">
   <div class="modal" onclick="e=>e.stopPropagation()">
-    <h3>⚙ Configuración</h3>
-    <p class="modal-sub">Estos datos se muestran en la página y se usan para generar los mensajes de WhatsApp.</p>
-    <div class="form-group"><label>Tu número de WhatsApp (sin +)</label>
+    <h3>Configuración</h3>
+    <div class="form-group"><label>Número de WhatsApp (sin +)</label>
       <input type="tel" id="cfgWA" placeholder="Ej: 5491123456789"></div>
-    <div class="form-group"><label>Precio por clase (ej: $15.000)</label>
-      <input type="text" id="cfgPrecio" placeholder="Ej: $15.000"></div>
-    <div class="form-group"><label>Bio / descripción corta</label>
-      <textarea id="cfgBio" rows="3"></textarea></div>
-    <div class="form-group"><label>Alumnos activos (número)</label>
-      <input type="number" id="cfgAlumnos" placeholder="Ej: 24"></div>
-    <div class="form-group"><label>Cambiar contraseña de admin</label>
-      <input type="password" id="cfgPass" placeholder="Nueva contraseña (dejar vacío para no cambiar)"></div>
+    <div class="form-group"><label>Precio por clase</label>
+      <input type="text" id="cfgPrecio" placeholder="Ej: $45.000"></div>
+    <div class="form-group"><label>Nueva contraseña de admin</label>
+      <input type="password" id="cfgPass" placeholder="Dejar vacío para no cambiar"></div>
     <div class="modal-actions">
       <button class="btn btn-secondary" onclick="cerrarModal('modalConfig')">Cancelar</button>
       <button class="btn btn-primary" onclick="guardarConfig()">Guardar</button>
@@ -676,11 +671,7 @@ function guardarOcu() { localStorage.setItem('rg_ocu', JSON.stringify(ocupados))
 function guardarCfg() { localStorage.setItem('rg_cfg', JSON.stringify(cfg)); }
 
 // ─── RENDER PAGE INFO ─────────────────────────────────────────────
-function renderInfo() {
-  document.getElementById('heroBio').textContent     = cfg.bio;
-  document.getElementById('heroPrecio').textContent  = cfg.precio;
-  document.getElementById('heroAlumnos').textContent = cfg.alumnos;
-}
+function renderInfo() { /* bio/precio/alumnos ya no se muestran en la página */ }
 
 // ─── CALENDARIO ───────────────────────────────────────────────────
 function renderCalendario() {
@@ -1063,10 +1054,12 @@ function loginAdmin() {
 
 function salirAdmin() {
   adminMode = false;
+  sessionStorage.removeItem('rg_admin_auth');
+  sessionStorage.removeItem('rg_admin_user');
   document.getElementById('adminBar').classList.add('hidden');
   document.getElementById('calBody').classList.remove('admin-mode');
   renderCalendario();
-  toast('Modo admin desactivado');
+  toast('Sesión cerrada');
 }
 
 function abrirConfigAdmin() {
@@ -1147,6 +1140,20 @@ function procesarAccionURL() {
 }
 
 function init() {
+  // Auto-entrar a admin si viene de /admin con sesión válida
+  if (new URLSearchParams(window.location.search).get('admin') === '1'
+      && sessionStorage.getItem('rg_admin_auth') === '1') {
+    window.history.replaceState({}, '', window.location.pathname);
+    adminMode = true;
+    document.getElementById('adminBar').classList.remove('hidden');
+    document.getElementById('calBody').classList.add('admin-mode');
+    const user = sessionStorage.getItem('rg_admin_user') || 'admin';
+    setTimeout(() => toast('Bienvenido, ' + user), 400);
+    setTimeout(() => {
+      actualizarBadgePendientes();
+      document.getElementById('calSection').scrollIntoView({behavior:'smooth'});
+    }, 300);
+  }
   renderInfo();
   procesarAccionURL();
   renderCalendario();
