@@ -114,12 +114,15 @@
     .wk-day.today { color:var(--verde); }
     .wk-row { display:grid; grid-template-columns:44px repeat(6,1fr); border-bottom:1px solid #191919; }
     .wk-time { font-size:.6rem; color:#555; padding:6px 4px 0; text-align:right; }
-    .wk-cell { height:34px; border-left:1px solid #191919; cursor:pointer; background:#111; transition:background .1s; }
+    .wk-cell { height:46px; border-left:1px solid #191919; cursor:pointer; background:#111; transition:background .1s; overflow:hidden; display:flex; flex-direction:column; justify-content:center; padding:2px 4px; }
     .wk-cell:hover { background:#1a1a1a; }
     .wk-cell.ocu  { background:rgba(255,45,32,.22); }
     .wk-cell.fijo { background:rgba(255,45,32,.32); }
     .wk-cell.pend { background:rgba(255,180,0,.14); }
     .wk-cell.bloq { background:rgba(255,180,0,.07); cursor:default; }
+    .wk-name { font-size:.56rem; font-weight:700; color:rgba(255,255,255,.85); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:1.2; }
+    .wk-name.pend-name { color:rgba(255,180,0,.9); }
+    .wk-name.fijo-name { color:rgba(255,120,100,.9); }
     .month-grid-wrap { padding:0 14px 20px; }
     .month-hdr { display:grid; grid-template-columns:repeat(7,1fr); margin-bottom:4px; }
     .month-dname { text-align:center; font-size:.62rem; color:var(--suave); font-weight:700; padding:4px 0; }
@@ -742,14 +745,14 @@ function renderDia() {
     const bloq=!ocu&&!pend&&esBloqueado(di,s);
     const esSiempre=SIEMPRE.some(x=>x.dia===di&&x.slot===s);
     const div=document.createElement('div');
-    let cls='dslot ', label='';
-    if (fij)       { cls+='fijo'; label=(fij.nombre||'Alumno fijo')+' — fijo'; }
-    else if (ocu)  { cls+='ocu';  label=(ocuV&&ocuV.nombre)?ocuV.nombre:'Ocupado'; }
-    else if (pend) { cls+='pend'; label=(pendientes[sk(fk,s)].nombre||'')+' — pendiente'; }
+    let cls='dslot ', label='', sub='';
+    if (fij)       { cls+='fijo'; label=(fij.nombre||'Alumno fijo'); sub='Fijo'+(fij.sede?' · '+fij.sede:''); }
+    else if (ocu)  { cls+='ocu';  label=(ocuV&&ocuV.nombre)?ocuV.nombre:'Ocupado'; sub=ocuV&&ocuV.sede?ocuV.sede:''; }
+    else if (pend) { cls+='pend'; label=(pendientes[sk(fk,s)].nombre||'Pendiente'); sub='Pendiente'+(pendientes[sk(fk,s)].sede?' · '+pendientes[sk(fk,s)].sede:''); }
     else if (bloq) { cls+='bloq'; label='Bloqueado'; }
     else           { cls+='libre'; label='+ Marcar'; }
     div.className=cls;
-    div.innerHTML=`<span class="hora">${hora(s)}</span><span class="estado">${label}</span>`;
+    div.innerHTML=`<span class="hora">${hora(s)}</span><span class="estado">${label}${sub?'<span style="font-size:.68rem;color:#666;margin-left:8px;">'+sub+'</span>':''}</span>`;
     if (!ocu&&!pend&&!bloq) {
       div.onclick=()=>{ ocupados[sk(fk,s)]=true; saveOcu(); renderDia(); toast('Marcado'); };
     } else if (!esSiempre&&!fij&&ocu) {
@@ -783,16 +786,29 @@ function renderSemana() {
     tl.textContent=hora(s); row.appendChild(tl);
     fechas.forEach((fecha,di)=>{
       const fk=fkey(fecha), fij=fijos[di+'_'+s];
-      const ocu=!!ocupados[sk(fk,s)]||!!fij||SIEMPRE.some(x=>x.dia===di&&x.slot===s);
-      const pend=!ocu&&!!pendientes[sk(fk,s)];
+      const ocuV=ocupados[sk(fk,s)];
+      const ocu=!!ocuV||!!fij||SIEMPRE.some(x=>x.dia===di&&x.slot===s);
+      const pendV=pendientes[sk(fk,s)];
+      const pend=!ocu&&!!pendV;
       const bloq=!ocu&&!pend&&esBloqueado(di,s);
       const cell=document.createElement('div');
       cell.className='wk-cell'+(fij?' fijo':ocu?' ocu':pend?' pend':bloq?' bloq':'');
+      // Nombre dentro de la celda
+      if (fij && fij.nombre) {
+        const n=document.createElement('div'); n.className='wk-name fijo-name'; n.textContent=fij.nombre; cell.appendChild(n);
+        cell.title=fij.nombre+(fij.sede?' — '+fij.sede:'');
+      } else if (ocu && ocuV && ocuV.nombre) {
+        const n=document.createElement('div'); n.className='wk-name'; n.textContent=ocuV.nombre; cell.appendChild(n);
+        cell.title=ocuV.nombre+(ocuV.sede?' — '+ocuV.sede:'');
+      } else if (pend && pendV && pendV.nombre) {
+        const n=document.createElement('div'); n.className='wk-name pend-name'; n.textContent=pendV.nombre; cell.appendChild(n);
+        cell.title=pendV.nombre+' (pendiente)';
+      }
       const esSiempre=SIEMPRE.some(x=>x.dia===di&&x.slot===s);
       if (!ocu&&!pend&&!bloq) {
         cell.onclick=()=>{ ocupados[sk(fk,s)]=true; saveOcu(); renderSemana(); toast('Marcado'); };
       } else if (!esSiempre&&!fij&&ocu) {
-        cell.title='Toca para liberar';
+        cell.title=(cell.title||'')+(cell.title?' · ':'')+' Toca para liberar';
         cell.onclick=()=>{ delete ocupados[sk(fk,s)]; saveOcu(); renderSemana(); toast('Liberado'); };
       }
       row.appendChild(cell);
@@ -813,12 +829,20 @@ function renderMes() {
     const d=new Date(base.getFullYear(),base.getMonth(),day);
     const di=(d.getDay()+6)%7, fk=fkey(d);
     const esH=d.getTime()===hoy.getTime(), esD=d.getDay()===0;
-    let ocuCnt=0;
-    for (let s=0;s<TOTAL_SLOTS;s++){if(esOcupado(fk,s,di))ocuCnt++;}
+    let ocuCnt=0; const nombres=[];
+    for (let s=0;s<TOTAL_SLOTS;s++){
+      if(esOcupado(fk,s,di)){
+        ocuCnt++;
+        const fij=fijos[di+'_'+s], ocuV=ocupados[sk(fk,s)];
+        const n=(fij&&fij.nombre)||(ocuV&&ocuV.nombre)||null;
+        if(n) nombres.push(hora(s)+' '+n);
+      }
+    }
     const pct=ocuCnt/TOTAL_SLOTS;
     const cell=document.createElement('div');
     cell.className='mcell'+(esH?' today':'')+(esD?' dom':'')+(pct>.5?' hiOcu':pct>.2?' midOcu':'');
     cell.textContent=day;
+    if(nombres.length) cell.title=nombres.join('\n');
     if (!esD&&ocuCnt>0){const dot=document.createElement('div');dot.className='mdot';dot.style.background=pct>.5?'var(--rojo)':'var(--amarillo)';cell.appendChild(dot);}
     if (!esD) {
       cell.onclick=()=>{
