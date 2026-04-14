@@ -246,8 +246,11 @@
     .alu-search-bar { padding:14px 20px 0; }
     .alu-search-bar input { width:100%; padding:11px 16px; background:var(--fondo3); border:1.5px solid var(--borde); border-radius:10px; color:var(--texto); font-size:.92rem; font-family:inherit; }
     .alu-search-bar input:focus { outline:none; border-color:var(--verde); }
-    .alu-add-btn { display:flex; align-items:center; justify-content:center; gap:8px; margin:14px 20px 0; padding:12px; border-radius:10px; border:1.5px dashed rgba(37,211,102,.35); background:rgba(37,211,102,.05); color:var(--verde); font-size:.85rem; font-weight:700; cursor:pointer; font-family:inherit; transition:all .15s; }
-    .alu-add-btn:hover { background:rgba(37,211,102,.1); border-color:var(--verde); }
+    .alu-fab { position:fixed; bottom:76px; right:20px; width:52px; height:52px; border-radius:50%; background:var(--verde); border:none; color:#000; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 18px rgba(37,211,102,.4); z-index:50; transition:transform .15s,box-shadow .15s; }
+    .alu-fab:hover { transform:scale(1.1); box-shadow:0 6px 26px rgba(37,211,102,.55); }
+    .alu-del-btn { flex-shrink:0; width:34px; height:34px; border-radius:8px; border:none; background:rgba(255,45,32,.1); color:#ff6b60; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background .15s; }
+    .alu-del-btn:hover { background:rgba(255,45,32,.25); }
+    @media(min-width:900px) { .alu-fab { right:calc((100vw - clamp(860px,78vw,1440px))/2 + 20px); } }
     .alu-list { padding:12px 20px; display:flex; flex-direction:column; gap:9px; }
     .alu-card { background:var(--fondo2); border:1px solid var(--borde); border-radius:12px; padding:13px 16px; display:flex; align-items:center; gap:12px; cursor:pointer; transition:border-color .15s; }
     .alu-card:hover { border-color:var(--verde); }
@@ -584,11 +587,10 @@
     <div class="alu-search-bar">
       <input type="search" placeholder="Buscar alumno..." id="aluSearchInput" oninput="renderAlumnosList()" autocomplete="off">
     </div>
-    <button class="alu-add-btn" onclick="openAlumnoNew()">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      Nuevo alumno
-    </button>
     <div class="alu-list" id="aluList"></div>
+    <button class="alu-fab" onclick="openAlumnoNew()" title="Nuevo alumno">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </button>
   </div>
   <!-- Editar -->
   <div id="aluEditPanel" class="hidden alu-edit">
@@ -1490,7 +1492,9 @@ function renderAlumnosList() {
         <p>${sub}</p>
         ${updFmt ? `<div class="alu-updated">Actualizado ${updFmt}</div>` : ''}
       </div>
-      <div class="alu-chevron">›</div>
+      <button class="alu-del-btn" onclick="delAluFromList(event,'${a.id}')" title="Eliminar alumno">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+      </button>
     </div>`;
   }).join('');
 }
@@ -1627,10 +1631,20 @@ function saveAlumnoEdit() {
   toast('Alumno guardado');
 }
 
+function delAluFromList(event, id) {
+  event.stopPropagation();
+  const nombre = alumnos[id]?.nombre || 'este alumno';
+  if (!confirm('¿Eliminar a ' + nombre + '?')) return;
+  delete alumnos[id];
+  saveAlumnos();
+  renderAlumnosList();
+  toast('Alumno eliminado');
+}
+
 function deleteAlumno() {
   if (!editingAluId) return;
   const nombre = alumnos[editingAluId]?.nombre || 'este alumno';
-  if (!confirm('Eliminar a ' + nombre + '?')) return;
+  if (!confirm('¿Eliminar a ' + nombre + '?')) return;
   delete alumnos[editingAluId];
   saveAlumnos();
   showAluList();
