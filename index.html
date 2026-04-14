@@ -143,6 +143,22 @@
     .cal-wrapper { overflow-x:auto; }
     .cal-inner { min-width:680px; }
 
+    /* ── MOBILE NAV DÍAS ─────────────────────────────── */
+    .mobile-day-nav {
+      display:none;
+      align-items:center; justify-content:space-between;
+      margin-bottom:10px; gap:8px;
+    }
+    .mobile-day-nav .mdlabel {
+      font-size:.82rem; font-weight:600; text-align:center; flex:1;
+    }
+    .mobile-day-nav .wbtn {
+      width:34px; height:34px; border-radius:8px;
+      background:var(--fondo2); border:1px solid var(--borde);
+      color:var(--texto); font-size:1rem; cursor:pointer; transition:background .2s;
+    }
+    .mobile-day-nav .wbtn:hover { background:var(--borde); }
+
     /* Header días */
     .cal-header {
       display:grid; grid-template-columns:52px repeat(6,1fr);
@@ -329,6 +345,20 @@
       .cal-section { padding:20px 8px 48px; }
       .hero-stats { gap:20px; }
       .header-nav .btn-ghost { display:none; }
+
+      /* Calendario mobile: 3 días */
+      .cal-wrapper { overflow-x:visible; }
+      .cal-inner   { min-width:0; }
+      .cal-header  { grid-template-columns:40px repeat(3,1fr); }
+      .cal-row     { grid-template-columns:40px repeat(3,1fr); }
+      .cal-cell    { height:40px; }
+      .time-lbl    { height:40px; font-size:.62rem; }
+      .cal-day-hdr { padding:8px 4px; }
+      .cal-day-hdr .dname { font-size:.6rem; }
+      .cal-day-hdr .dnum  { font-size:1rem; }
+      .cal-cell.libre:hover::after,
+      .cal-cell.ocupado::after { font-size:.58rem; }
+      .mobile-day-nav { display:flex; }
     }
   </style>
 </head>
@@ -424,6 +454,13 @@
       <button class="btn btn-secondary" style="font-size:.78rem;padding:6px 12px;" onclick="abrirConfigAdmin()">⚙ Configuración</button>
       <button class="btn btn-danger"    style="font-size:.78rem;padding:6px 12px;" onclick="salirAdmin()">Salir</button>
     </div>
+  </div>
+
+  <!-- Navegación de días para mobile -->
+  <div class="mobile-day-nav" id="mobileDayNav">
+    <button class="wbtn" onclick="cambiarDiasMobile(-1)">‹</button>
+    <span class="mdlabel" id="mobileDayLabel"></span>
+    <button class="wbtn" onclick="cambiarDiasMobile(1)">›</button>
   </div>
 
   <div class="cal-wrapper">
@@ -554,6 +591,8 @@ const DEFAULT_CFG = {
 
 let cfg       = Object.assign({}, DEFAULT_CFG, JSON.parse(localStorage.getItem('rg_cfg') || '{}'));
 let ocupados  = JSON.parse(localStorage.getItem('rg_ocu') || '{}'); // { 'YYYY-MM-DD_slot': true }
+let mobileDayStart = 0; // 0 = Lun-Mié, 3 = Jue-Sáb
+function esMobile() { return window.innerWidth <= 600; }
 
 // Slots siempre ocupados: { dia: 0=Lun…5=Sáb, slot: número }
 const SIEMPRE_OCUPADO = [
@@ -605,18 +644,34 @@ function renderInfo() {
 
 // ─── CALENDARIO ───────────────────────────────────────────────────
 function renderCalendario() {
-  const fechas = getFechas(semanaOff);
-  const lunes  = fechas[0], sab = fechas[5];
-  const fmt    = d => d.toLocaleDateString('es-ES',{day:'numeric',month:'short'});
+  const todasFechas = getFechas(semanaOff);
+  const lunes = todasFechas[0], sab = todasFechas[5];
+  const fmt   = d => d.toLocaleDateString('es-ES',{day:'numeric',month:'short'});
   document.getElementById('wlabel').textContent = `${fmt(lunes)} – ${fmt(sab)}`;
+
+  // En mobile mostramos 3 días a la vez
+  const mobile = esMobile();
+  const start  = mobile ? mobileDayStart : 0;
+  const count  = mobile ? 3 : 6;
+  const fechas = todasFechas.slice(start, start + count);
+
+  // Actualizar nav mobile
+  if (mobile) {
+    const labels = mobileDayStart === 0
+      ? `${fmt(todasFechas[0])} – ${fmt(todasFechas[2])}`
+      : `${fmt(todasFechas[3])} – ${fmt(todasFechas[5])}`;
+    document.getElementById('mobileDayLabel').textContent = labels;
+  }
 
   // Header
   const hdr = document.getElementById('calHeader');
-  hdr.innerHTML = '<div></div>' + fechas.map((d,i) => `
-    <div class="cal-day-hdr${esHoy(d)?' today':''}">
-      <div class="dname">${DIAS_S[i]}</div>
+  hdr.innerHTML = '<div></div>' + fechas.map((d, i) => {
+    const di = start + i;
+    return `<div class="cal-day-hdr${esHoy(d)?' today':''}">
+      <div class="dname">${DIAS_S[di]}</div>
       <div class="dnum">${d.getDate()}</div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 
   // Body
   const body = document.getElementById('calBody');
@@ -632,7 +687,8 @@ function renderCalendario() {
     if (s % 2 === 0) lbl.textContent = slotAHora(s);
     row.appendChild(lbl);
 
-    fechas.forEach((fecha, di) => {
+    fechas.forEach((fecha, i) => {
+      const di   = start + i;
       const cell = document.createElement('div');
       const fk   = fkey(fecha);
       const sk   = slotKey(fk, s);
@@ -655,7 +711,12 @@ function renderCalendario() {
   }
 
   // Línea hora actual
-  if (semanaOff === 0) dibujarLineaActual(fechas);
+  if (semanaOff === 0) dibujarLineaActual(todasFechas);
+}
+
+function cambiarDiasMobile(dir) {
+  mobileDayStart = mobileDayStart === 0 ? 3 : 0;
+  renderCalendario();
 }
 
 function dibujarLineaActual(fechas) {
@@ -877,6 +938,12 @@ function init() {
   renderCalendario();
   // Actualizar línea cada minuto
   setInterval(() => { if (semanaOff === 0) renderCalendario(); }, 60000);
+  // Re-render al cambiar tamaño de ventana (mobile ↔ desktop)
+  let resizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(renderCalendario, 150);
+  });
 }
 
 init();
