@@ -745,22 +745,42 @@ function renderCargar() {
     count++;
     const di=diIdx(d), chip=document.createElement('div');
     chip.className='dchip';
+    chip.dataset.fkey = fkey(d);
     chip.innerHTML=`<div class="dn">${DIAS_S[di]}</div><div class="dd">${d.getDate()}</div>`;
     chip.onclick=()=>elegirFecha(d,chip);
     chips.appendChild(chip);
   }
 }
 
-function elegirFecha(d,chip) {
+function elegirFecha(d, chip, preSlot) {
   selDate=d; selSlot=null;
   document.querySelectorAll('.dchip').forEach(c=>c.classList.remove('sel'));
   chip.classList.add('sel');
   renderSlots();
   document.getElementById('secSlot').classList.remove('hidden');
   document.getElementById('secNombre').classList.add('hidden');
-  // update fijo day label
   const fijoLabel = document.getElementById('fijoOptDiaLabel');
   if (fijoLabel) fijoLabel.textContent = 'Todos los ' + DIAS_L[diIdx(d)];
+  // Si viene con slot pre-seleccionado (desde el calendario), clickearlo automáticamente
+  if (preSlot !== undefined && preSlot !== null) {
+    const horaTarget = hora(preSlot);
+    document.querySelectorAll('.tbtn').forEach(btn => {
+      if (!btn.classList.contains('ocu') && !btn.classList.contains('bloq') &&
+          btn.textContent.trim().startsWith(horaTarget)) {
+        btn.click();
+        setTimeout(()=>document.getElementById('secNombre').scrollIntoView({behavior:'smooth',block:'start'}), 80);
+      }
+    });
+  }
+}
+
+// Navegar a Cargar clase con fecha y slot pre-seleccionados (desde el calendario)
+function cargarDesdeCalendario(d, s) {
+  ir('cargar');
+  const targetFk = fkey(d);
+  document.querySelectorAll('.dchip').forEach(chip => {
+    if (chip.dataset.fkey === targetFk) elegirFecha(d, chip, s);
+  });
 }
 
 function renderSlots() {
@@ -915,11 +935,7 @@ function renderDia() {
     div.className=cls;
     div.innerHTML=`<span class="hora">${hora(s)}</span><span class="estado">${label}${sub?'<span style="font-size:.72rem;color:#666;margin-left:8px;">'+sub+'</span>':''}</span>`;
     if (!ocu&&!pend&&!bloq) {
-      div.onclick=()=>{
-        showConfirm('Cargar clase', `Horario: ${hora(s)} hs\nFecha: ${document.getElementById('diaLabel').textContent}`, ()=>{
-          ocupados[sk(fk,s)]={nombre:null,sede:null}; saveOcu(); renderDia(); toast('Marcado');
-        }, { okLabel:'Cargar', okBg:'var(--verde)', okColor:'#000' });
-      };
+      div.onclick=()=>cargarDesdeCalendario(d, s);
     } else if (fij) {
       const del=document.createElement('button');
       del.className='dslot-del'; del.textContent='×'; del.title='Eliminar fijo';
@@ -995,11 +1011,8 @@ function renderSemana() {
       }
       const diaFmt = fecha.toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'}).replace(/^\w/,c=>c.toUpperCase());
       if (!ocu&&!pend&&!bloq) {
-        cell.onclick=()=>{
-          showConfirm('Cargar clase', `Horario: ${hora(s)} hs\nFecha: ${diaFmt}`, ()=>{
-            ocupados[sk(fk,s)]={nombre:null,sede:null}; saveOcu(); renderSemana(); toast('Marcado');
-          }, { okLabel:'Cargar', okBg:'var(--verde)', okColor:'#000' });
-        };
+        cell.title='Tocar para cargar clase';
+        cell.onclick=()=>cargarDesdeCalendario(fecha, s);
       } else if (fij) {
         cell.onclick=()=>{
           showConfirm('Eliminar clase fija', `Alumno: ${fij.nombre||'—'}\nHorario: ${hora(s)} hs${fij.sede?'\nSede: '+fij.sede:''}`, ()=>{
