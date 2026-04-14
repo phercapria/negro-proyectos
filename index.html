@@ -460,7 +460,10 @@
   <div class="modal" onclick="e=>e.stopPropagation()">
     <h3>Solicitar clase</h3>
     <p class="modal-sub">Completá tus datos y te contactamos por WhatsApp con toda la información.</p>
-    <div class="slot-badge" id="slotBadge"></div>
+    <div class="slot-badge" id="slotBadge" style="cursor:pointer;" onclick="cerrarModal('modalPostula')" title="Tocá para cambiar el horario"></div>
+    <div style="text-align:right;margin-top:-12px;margin-bottom:14px;">
+      <button type="button" onclick="cerrarModal('modalPostula')" style="background:none;border:none;color:var(--verde);font-size:.78rem;font-weight:600;cursor:pointer;padding:0;">Cambiar horario ›</button>
+    </div>
     <div class="form-group">
       <label>Tu nombre completo *</label>
       <input type="text" id="postNombre" placeholder="Ej: Juan García" maxlength="40">
@@ -478,12 +481,10 @@
       </select>
       <div id="sedeDir" style="margin-top:8px;padding:10px 12px;border-radius:8px;background:var(--fondo3);border:1px solid var(--borde);font-size:.8rem;color:var(--texto-suave);display:none;"></div>
     </div>
+    <input type="hidden" id="postDuracion" value="1">
     <div class="form-group">
-      <label>Duración deseada</label>
-      <select id="postDuracion">
-        <option value="1">1 hora</option>
-        <option value="2">2 horas</option>
-      </select>
+      <label>Duración</label>
+      <div id="duracionDisplay" style="padding:11px 16px;background:var(--fondo3);border:1px solid var(--borde);border-radius:8px;font-size:.9rem;color:var(--texto);"></div>
     </div>
     <div class="form-group">
       <label>¿Cuál es tu nivel?</label>
@@ -1006,10 +1007,10 @@ function abrirPostula(fecha, slot, dateObj, diaIdx) {
   document.getElementById('postNombre').value = '';
   document.getElementById('postWA').value     = '';
   document.getElementById('postNota').value   = '';
-  // Update duration option with price from config
+  // Mostrar duración con precio
   const p1 = parsePrecioNum(cfg.precio);
-  const sel = document.getElementById('postDuracion');
-  sel.options[0].text = p1 ? `1 hora (${formatPrecio(p1)})` : '1 hora';
+  const durDisplay = document.getElementById('duracionDisplay');
+  if (durDisplay) durDisplay.textContent = p1 ? `1 hora — ${formatPrecio(p1)}` : '1 hora';
   abrirModal('modalPostula');
 }
 
@@ -1150,11 +1151,13 @@ function cerrarModal(id, e) {
         overlay.querySelector('.modal').innerHTML = `
           <h3>Solicitar clase</h3>
           <p class="modal-sub">Completá tus datos y te contactamos por WhatsApp con toda la información.</p>
-          <div class="slot-badge" id="slotBadge"></div>
+          <div class="slot-badge" id="slotBadge" style="cursor:pointer;" onclick="cerrarModal('modalPostula')" title="Tocá para cambiar el horario"></div>
+          <div style="text-align:right;margin-top:-12px;margin-bottom:14px;"><button type="button" onclick="cerrarModal('modalPostula')" style="background:none;border:none;color:var(--verde);font-size:.78rem;font-weight:600;cursor:pointer;padding:0;">Cambiar horario ›</button></div>
           <div class="form-group"><label>Tu nombre completo *</label><input type="text" id="postNombre" placeholder="Ej: Juan García" maxlength="40"></div>
           <div class="form-group"><label>Tu número de WhatsApp *</label><input type="tel" id="postWA" placeholder="Ej: 1134567890 (sin 0 ni 15)" maxlength="20"></div>
           <div class="form-group"><label>Sede preferida</label><select id="postSede"><option value="King Pong (Luis Viale 526)">King Pong — Luis Viale 526</option><option value="Yabrudense (Alberti 1541)">Yabrudense — Alberti 1541</option><option value="Sin preferencia">Sin preferencia / cualquiera</option></select></div>
-          <div class="form-group"><label>Duración deseada</label><select id="postDuracion"><option value="1">1 hora</option></select></div>
+          <input type="hidden" id="postDuracion" value="1">
+          <div class="form-group"><label>Duración</label><div id="duracionDisplay" style="padding:11px 16px;background:var(--fondo3);border:1px solid var(--borde);border-radius:8px;font-size:.9rem;color:var(--texto);"></div></div>
           <div class="form-group"><label>¿Cuál es tu nivel?</label><select id="postNivel"><option value="Principiante">Principiante</option><option value="Intermedio">Intermedio</option><option value="Avanzado">Avanzado</option></select></div>
           <div class="form-group"><label>Mensaje adicional (opcional)</label><textarea id="postNota" rows="2" placeholder="Contame algo sobre vos o tus objetivos..."></textarea></div>
           <div class="modal-actions">
