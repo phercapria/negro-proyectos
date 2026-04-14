@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin — Rodrigo Gilabert</title>
+  <style>
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    html, body { height:100%; }
+    body {
+      font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;
+      background:#000b09; color:#f0f0f0;
+      display:flex; align-items:center; justify-content:center;
+      min-height:100vh; overflow:hidden;
+    }
+
+    /* Fondo con imagen */
+    .bg {
+      position:fixed; inset:0;
+      background:url('rodrigo.jpeg') center 25% / cover no-repeat;
+      z-index:0;
+    }
+    .bg::after {
+      content:'';
+      position:absolute; inset:0;
+      background:linear-gradient(to bottom, rgba(0,11,9,.45) 0%, rgba(0,11,9,.85) 55%, rgba(0,11,9,.97) 100%);
+    }
+
+    /* Card de login */
+    .card {
+      position:relative; z-index:1;
+      width:100%; max-width:380px;
+      padding:40px 32px;
+      background:rgba(20,20,20,.85);
+      border:1px solid #2e2e2e;
+      border-radius:20px;
+      backdrop-filter:blur(12px);
+      margin:20px;
+    }
+
+    .brand { text-align:center; margin-bottom:32px; }
+    .brand h1 { font-size:1.4rem; font-weight:700; line-height:1.15; }
+    .brand h1 span { color:#25d366; display:block; }
+    .brand p { font-size:.75rem; color:#888; margin-top:6px; letter-spacing:.06em; text-transform:uppercase; }
+
+    .form-group { margin-bottom:18px; }
+    .form-group label {
+      display:block; font-size:.72rem; font-weight:600;
+      text-transform:uppercase; letter-spacing:.07em;
+      color:#888; margin-bottom:7px;
+    }
+    .form-group input {
+      width:100%; padding:12px 14px;
+      background:#1c1c1c; border:1px solid #2e2e2e;
+      border-radius:10px; color:#f0f0f0;
+      font-size:.92rem; font-family:inherit;
+      transition:border-color .2s;
+    }
+    .form-group input:focus { outline:none; border-color:#25d366; }
+
+    .error {
+      background:rgba(255,45,32,.12); border:1px solid rgba(255,45,32,.3);
+      border-radius:8px; padding:10px 14px;
+      font-size:.8rem; color:#ff6b63;
+      margin-bottom:16px; display:none;
+    }
+
+    .btn-login {
+      width:100%; padding:14px;
+      background:#25d366; color:#000;
+      border:none; border-radius:12px;
+      font-size:1rem; font-weight:700;
+      font-family:inherit; cursor:pointer;
+      transition:background .2s, transform .15s;
+    }
+    .btn-login:hover { background:#1ebe5b; transform:translateY(-1px); }
+    .btn-login:active { transform:translateY(0); }
+
+    .back { text-align:center; margin-top:18px; }
+    .back a { font-size:.78rem; color:#888; text-decoration:none; transition:color .2s; }
+    .back a:hover { color:#f0f0f0; }
+
+    /* Usuarios (para la gestión futura) */
+    .users-section { display:none; }
+  </style>
+</head>
+<body>
+
+<div class="bg"></div>
+
+<div class="card">
+  <div class="brand">
+    <h1>Rodrigo<span>Gilabert</span></h1>
+    <p>Administración</p>
+  </div>
+
+  <form id="loginForm" onsubmit="login(event)">
+    <div class="form-group">
+      <label>Usuario</label>
+      <input type="text" id="usuario" placeholder="usuario" autocomplete="username" autofocus>
+    </div>
+    <div class="form-group">
+      <label>Contraseña</label>
+      <input type="password" id="password" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <div class="error" id="errorMsg">Usuario o contraseña incorrectos.</div>
+    <button type="submit" class="btn-login">Ingresar</button>
+  </form>
+
+  <div class="back">
+    <a href="/">← Volver al sitio</a>
+  </div>
+</div>
+
+<script>
+// ─── USUARIOS ────────────────────────────────────────────────────
+// Usuarios almacenados en localStorage como { usuario: passwordHash }
+// Default si no hay nada configurado
+const USERS_KEY = 'rg_users';
+
+function getUsers() {
+  const stored = localStorage.getItem(USERS_KEY);
+  if (stored) return JSON.parse(stored);
+  // Defaults: tres usuarios iniciales con la misma contraseña
+  return {
+    'rodrigo':  hashSimple('rodrigo2024'),
+    'fernanda': hashSimple('rodrigo2024'),
+    'negro':    hashSimple('rodrigo2024'),
+  };
+}
+
+// Hash simple (no criptográfico, suficiente para este uso)
+function hashSimple(str) {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) {
+    h = (Math.imul(31, h) + str.charCodeAt(i)) | 0;
+  }
+  return h.toString(36);
+}
+
+function login(e) {
+  e.preventDefault();
+  const usuario  = document.getElementById('usuario').value.trim().toLowerCase();
+  const password = document.getElementById('password').value;
+  const users    = getUsers();
+  const cfg      = JSON.parse(localStorage.getItem('rg_cfg') || '{}');
+
+  // También acepta la contraseña de admin del sistema principal
+  const adminPass = cfg.password || 'rodrigo2024';
+  const validAdmin = password === adminPass;
+  const validUser  = users[usuario] && users[usuario] === hashSimple(password);
+
+  if (validUser || validAdmin) {
+    // Guardar sesión
+    sessionStorage.setItem('rg_admin_user', usuario || 'admin');
+    sessionStorage.setItem('rg_admin_auth', '1');
+    window.location.href = '/?admin=1';
+  } else {
+    const err = document.getElementById('errorMsg');
+    err.style.display = 'block';
+    document.getElementById('password').value = '';
+    document.getElementById('password').focus();
+    setTimeout(() => err.style.display = 'none', 3000);
+  }
+}
+</script>
+</body>
+</html>
