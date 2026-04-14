@@ -185,11 +185,22 @@
     .alu-edit .fg { margin-bottom:14px; }
     .alu-edit .fg label { display:block; font-size:.7rem; font-weight:700; color:var(--suave); text-transform:uppercase; letter-spacing:.06em; margin-bottom:6px; }
     .alu-edit .fg input,
-    .alu-edit .fg textarea { width:100%; padding:12px 16px; background:var(--fondo3); border:1.5px solid var(--borde); border-radius:10px; color:var(--texto); font-size:.92rem; font-family:inherit; resize:vertical; }
+    .alu-edit .fg textarea,
+    .alu-edit .fg select { width:100%; padding:12px 16px; background:var(--fondo3); border:1.5px solid var(--borde); border-radius:10px; color:var(--texto); font-size:.92rem; font-family:inherit; resize:vertical; appearance:auto; }
     .alu-edit .fg input:focus,
-    .alu-edit .fg textarea:focus { outline:none; border-color:var(--verde); }
+    .alu-edit .fg textarea:focus,
+    .alu-edit .fg select:focus { outline:none; border-color:var(--verde); }
     .alu-actions { display:flex; gap:8px; margin-top:20px; }
     .btn-del-alu { padding:12px 18px; border-radius:10px; border:1px solid rgba(255,45,32,.3); background:rgba(255,45,32,.1); color:#ff6b60; font-size:.82rem; font-weight:700; cursor:pointer; font-family:inherit; flex-shrink:0; }
+    /* Foto */
+    .alu-photo-wrap { display:flex; flex-direction:column; align-items:center; gap:8px; cursor:pointer; margin-bottom:6px; }
+    .alu-photo-circle { width:88px; height:88px; border-radius:50%; background:rgba(37,211,102,.13); border:2.5px solid rgba(37,211,102,.3); display:flex; align-items:center; justify-content:center; overflow:hidden; font-weight:700; font-size:1.6rem; color:var(--verde); transition:border-color .15s; flex-shrink:0; }
+    .alu-photo-wrap:hover .alu-photo-circle { border-color:var(--verde); }
+    .alu-photo-lbl { font-size:.72rem; color:var(--suave); font-weight:600; }
+    /* Edad badge */
+    .edad-badge { display:inline-block; background:rgba(37,211,102,.15); color:var(--verde); font-size:.7rem; font-weight:700; border-radius:20px; padding:2px 9px; margin-left:8px; vertical-align:middle; }
+    /* Última actualización */
+    .alu-updated { font-size:.7rem; color:#444; margin-top:3px; }
 
     /* ── BOTTOM NAV ── */
     .bottom-nav { position:fixed; bottom:0; left:0; right:0; background:var(--fondo2); border-top:1px solid var(--borde); display:flex; padding:8px 0 max(8px, env(safe-area-inset-bottom)); z-index:200; }
@@ -385,18 +396,60 @@
   </div>
   <!-- Editar -->
   <div id="aluEditPanel" class="hidden alu-edit">
-    <div class="fg"><label>Nombre</label><input type="text" id="aluNombre" maxlength="60" placeholder="Nombre completo"></div>
+    <!-- Foto -->
+    <div style="display:flex;flex-direction:column;align-items:center;margin-bottom:20px;">
+      <div class="alu-photo-wrap" onclick="document.getElementById('aluFotoInput').click()" title="Cambiar foto">
+        <div class="alu-photo-circle" id="aluFotoCircle">
+          <img id="aluFotoImg" src="" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:50%;">
+          <span id="aluFotoIni"></span>
+        </div>
+        <span class="alu-photo-lbl">Tocar para cambiar foto</span>
+      </div>
+      <input type="file" id="aluFotoInput" accept="image/*" style="display:none" onchange="aluFotoChange(event)">
+    </div>
+    <div class="fg"><label>Nombre</label><input type="text" id="aluNombre" maxlength="60" placeholder="Nombre completo" oninput="aluNombreInput(this)"></div>
     <div class="fg"><label>WhatsApp</label><input type="tel" id="aluWA" placeholder="Sin codigo de pais, ej: 1154811624" maxlength="20"></div>
     <div class="fg"><label>Mail</label><input type="email" id="aluMail" placeholder="juan@mail.com"></div>
     <div class="fg"><label>Paleta</label><input type="text" id="aluPaleta" placeholder="Marca y modelo" maxlength="80"></div>
-    <div class="fg"><label>Cumpleanos</label><input type="text" id="aluCumple" placeholder="DD/MM/AAAA" maxlength="10"></div>
-    <div class="fg"><label>Categoria TMT</label><input type="text" id="aluCatTmt" placeholder="Ej: 1500 puntos" maxlength="60"></div>
-    <div class="fg"><label>Categoria FETEMBA</label><input type="text" id="aluCatFet" placeholder="Ej: Serie B" maxlength="60"></div>
+    <div class="fg">
+      <label>Cumpleanos <span id="aluEdadBadge" class="edad-badge hidden"></span></label>
+      <input type="text" id="aluCumple" placeholder="DD/MM/AAAA" maxlength="10" oninput="aluCumpleInput(this)">
+    </div>
+    <div class="fg">
+      <label>Categoria TMT</label>
+      <select id="aluCatTmt">
+        <option value="">Sin categoria</option>
+        <option value="8va Categoria">8va Categoria</option>
+        <option value="7ma Categoria">7ma Categoria</option>
+        <option value="6ta Categoria">6ta Categoria</option>
+        <option value="5ta Categoria">5ta Categoria</option>
+        <option value="4ta Categoria">4ta Categoria</option>
+        <option value="3ra Categoria">3ra Categoria</option>
+        <option value="2da Categoria">2da Categoria</option>
+        <option value="1ra Categoria">1ra Categoria</option>
+      </select>
+    </div>
+    <div class="fg">
+      <label>Categoria FETEMBA</label>
+      <select id="aluCatFet">
+        <option value="">Sin categoria</option>
+        <option value="8va Division">8va Division</option>
+        <option value="7ma Division">7ma Division</option>
+        <option value="6ta Division">6ta Division</option>
+        <option value="5ta Division">5ta Division</option>
+        <option value="4ta Division">4ta Division</option>
+        <option value="3ra Division">3ra Division</option>
+        <option value="2da Division">2da Division</option>
+        <option value="1ra Division">1ra Division</option>
+        <option value="Division de Honor">Division de Honor</option>
+      </select>
+    </div>
     <div class="fg"><label>Otros</label><textarea id="aluOtros" rows="3" placeholder="Nivel, objetivos, observaciones..."></textarea></div>
     <div class="alu-actions">
       <button class="btn-save" style="flex:1" onclick="saveAlumnoEdit()">Guardar</button>
       <button class="btn-del-alu" id="btnDelAlu" onclick="deleteAlumno()">Eliminar</button>
     </div>
+    <p id="aluUpdatedLbl" style="font-size:.7rem;color:#444;text-align:center;margin-top:16px;"></p>
   </div>
 </div>
 
@@ -948,13 +1001,89 @@ function renderAlumnosList() {
   }
   list.innerHTML = arr.map(a => {
     const ini = a.nombre.split(' ').map(w=>w[0]||'').join('').slice(0,2).toUpperCase();
-    const sub = [a.mail, a.wa ? 'WA '+a.wa : ''].filter(Boolean).join(' · ') || 'Sin info adicional';
+    const sub = [a.catTmt||'', a.catFet||''].filter(Boolean).join(' · ') || [a.mail, a.wa?'WA '+a.wa:''].filter(Boolean).join(' · ') || 'Sin info adicional';
+    const avatarContent = a.foto
+      ? `<img src="${a.foto}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`
+      : ini;
+    const updFmt = a.updatedAt
+      ? new Date(a.updatedAt).toLocaleDateString('es-ES',{day:'numeric',month:'short',year:'numeric'})
+      : '';
     return `<div class="alu-card" onclick="openAlumnoEdit('${a.id}')">
-      <div class="alu-avatar">${ini}</div>
-      <div class="alu-info"><h4>${a.nombre}</h4><p>${sub}</p></div>
+      <div class="alu-avatar">${avatarContent}</div>
+      <div class="alu-info">
+        <h4>${a.nombre}</h4>
+        <p>${sub}</p>
+        ${updFmt ? `<div class="alu-updated">Actualizado ${updFmt}</div>` : ''}
+      </div>
       <div class="alu-chevron">›</div>
     </div>`;
   }).join('');
+}
+
+function calcEdad(cumple) {
+  // cumple = DD/MM/AAAA
+  const parts = (cumple||'').split('/');
+  if (parts.length !== 3 || parts[2].length !== 4) return null;
+  const [d, m, y] = parts.map(Number);
+  if (!d||!m||!y||y<1920) return null;
+  const hoy = new Date(); hoy.setHours(0,0,0,0);
+  const nac = new Date(y, m-1, d);
+  let edad = hoy.getFullYear() - nac.getFullYear();
+  const diff = hoy.getMonth() - nac.getMonth() || hoy.getDate() - nac.getDate();
+  if (diff < 0) edad--;
+  return edad >= 0 && edad < 120 ? edad : null;
+}
+
+function aluCumpleInput(inp) {
+  // Auto-format DD/MM/AAAA
+  let v = inp.value.replace(/\D/g,'');
+  if (v.length > 2) v = v.slice(0,2)+'/'+v.slice(2);
+  if (v.length > 5) v = v.slice(0,5)+'/'+v.slice(5,9);
+  inp.value = v;
+  const edad = calcEdad(v);
+  const badge = document.getElementById('aluEdadBadge');
+  if (edad !== null) { badge.textContent = edad+' años'; badge.classList.remove('hidden'); }
+  else badge.classList.add('hidden');
+}
+
+function aluNombreInput(inp) {
+  // Update avatar initials in real time
+  const ini = inp.value.trim().split(' ').map(w=>w[0]||'').join('').slice(0,2).toUpperCase();
+  const span = document.getElementById('aluFotoIni');
+  if (span) span.textContent = ini;
+  const a = alumnos[editingAluId];
+  if (a && !a.foto) { /* only update initials if no photo */ }
+}
+
+function aluFotoChange(event) {
+  const file = event.target.files[0]; if (!file) return;
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  const img = new Image();
+  const reader = new FileReader();
+  reader.onload = e => {
+    img.onload = () => {
+      const size = 240;
+      canvas.width = size; canvas.height = size;
+      // crop to square center
+      const s = Math.min(img.width, img.height);
+      const sx = (img.width-s)/2, sy = (img.height-s)/2;
+      ctx.drawImage(img, sx, sy, s, s, 0, 0, size, size);
+      const b64 = canvas.toDataURL('image/jpeg', 0.7);
+      const a = alumnos[editingAluId]; if (!a) return;
+      a.foto = b64;
+      showAluFoto(b64);
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function showAluFoto(src) {
+  const imgEl = document.getElementById('aluFotoImg');
+  const ini   = document.getElementById('aluFotoIni');
+  if (src) { imgEl.src=src; imgEl.style.display='block'; ini.style.display='none'; }
+  else     { imgEl.style.display='none'; ini.style.display=''; }
 }
 
 function openAlumnoEdit(id) {
@@ -968,15 +1097,32 @@ function openAlumnoEdit(id) {
   document.getElementById('aluCatTmt').value  = a.catTmt  || '';
   document.getElementById('aluCatFet').value  = a.catFet  || '';
   document.getElementById('aluOtros').value   = a.otros   || '';
+  // Foto / iniciales
+  const ini = a.nombre.split(' ').map(w=>w[0]||'').join('').slice(0,2).toUpperCase();
+  document.getElementById('aluFotoIni').textContent = ini;
+  showAluFoto(a.foto||null);
+  // Edad
+  const badge = document.getElementById('aluEdadBadge');
+  const edad = calcEdad(a.cumple);
+  if (edad !== null) { badge.textContent = edad+' años'; badge.classList.remove('hidden'); }
+  else badge.classList.add('hidden');
+  // Última actualización
+  const upd = document.getElementById('aluUpdatedLbl');
+  if (upd) {
+    if (a.updatedAt) {
+      const d = new Date(a.updatedAt);
+      upd.textContent = 'Ultima actualizacion: ' + d.toLocaleDateString('es-ES',{day:'numeric',month:'long',year:'numeric'}) + ' a las ' + d.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}) + ' hs';
+    } else { upd.textContent = ''; }
+  }
   document.getElementById('aluListPanel').classList.add('hidden');
   document.getElementById('aluEditPanel').classList.remove('hidden');
-  document.getElementById('aluViewTitle').textContent = a.nombre;
+  document.getElementById('aluViewTitle').textContent = a.nombre || 'Nuevo alumno';
   window.scrollTo(0,0);
 }
 
 function openAlumnoNew() {
   const newId = Date.now().toString(36) + Math.random().toString(36).slice(2,5);
-  alumnos[newId] = { id:newId, nombre:'', wa:'', mail:'', paleta:'', cumple:'', catTmt:'', catFet:'', otros:'', creado:new Date().toISOString() };
+  alumnos[newId] = { id:newId, nombre:'', wa:'', mail:'', paleta:'', cumple:'', catTmt:'', catFet:'', otros:'', foto:'', creado:new Date().toISOString(), updatedAt:'' };
   openAlumnoEdit(newId);
   // Wait until DOM updates then focus nombre
   setTimeout(()=>document.getElementById('aluNombre').focus(), 80);
@@ -986,16 +1132,23 @@ function saveAlumnoEdit() {
   const a = alumnos[editingAluId]; if (!a) return;
   const nombre = document.getElementById('aluNombre').value.trim();
   if (!nombre) { toast('El nombre es obligatorio'); return; }
-  a.nombre = nombre;
-  a.wa     = document.getElementById('aluWA').value.trim().replace(/\D/g,'');
-  a.mail   = document.getElementById('aluMail').value.trim();
-  a.paleta = document.getElementById('aluPaleta').value.trim();
-  a.cumple = document.getElementById('aluCumple').value.trim();
-  a.catTmt = document.getElementById('aluCatTmt').value.trim();
-  a.catFet = document.getElementById('aluCatFet').value.trim();
-  a.otros  = document.getElementById('aluOtros').value.trim();
+  a.nombre    = nombre;
+  a.wa        = document.getElementById('aluWA').value.trim().replace(/\D/g,'');
+  a.mail      = document.getElementById('aluMail').value.trim();
+  a.paleta    = document.getElementById('aluPaleta').value.trim();
+  a.cumple    = document.getElementById('aluCumple').value.trim();
+  a.catTmt    = document.getElementById('aluCatTmt').value;
+  a.catFet    = document.getElementById('aluCatFet').value;
+  a.otros     = document.getElementById('aluOtros').value.trim();
+  a.updatedAt = new Date().toISOString();
   saveAlumnos();
   document.getElementById('aluViewTitle').textContent = a.nombre;
+  // Update updatedAt label
+  const upd = document.getElementById('aluUpdatedLbl');
+  if (upd) {
+    const d = new Date(a.updatedAt);
+    upd.textContent = 'Ultima actualizacion: ' + d.toLocaleDateString('es-ES',{day:'numeric',month:'long',year:'numeric'}) + ' a las ' + d.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}) + ' hs';
+  }
   toast('Alumno guardado');
 }
 
