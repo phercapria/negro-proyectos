@@ -256,6 +256,14 @@
       </div>
     </div>
     <div class="field-group">
+      <label>Sede</label>
+      <select id="inpSede" style="width:100%;padding:12px 16px;background:var(--fondo3);border:1.5px solid var(--borde);border-radius:10px;color:var(--texto);font-size:.92rem;font-family:inherit;appearance:auto;">
+        <option value="King Pong">King Pong — Luis Viale 526</option>
+        <option value="Yabrudense">Yabrudense — Alberti 1541</option>
+        <option value="">Sin especificar</option>
+      </select>
+    </div>
+    <div class="field-group">
       <label>Nombre del alumno (opcional)</label>
       <input type="text" id="inpNombre" placeholder="Ej: Juan Garcia" maxlength="40">
     </div>
@@ -486,27 +494,27 @@ function guardarClase() {
   const fk     = fkey(selDate);
   const di     = diIdx(selDate);
   const nombre = document.getElementById('inpNombre').value.trim() || null;
+  const sede   = document.getElementById('inpSede').value || null;
+  const info   = { nombre: nombre||null, sede: sede||null };
 
   if (tipoClase === 'fijo') {
     const rep = document.querySelector('input[name="fijoRep"]:checked').value;
     if (rep === 'dia') {
-      // todos los [dia de semana]
-      fijos[di + '_' + selSlot] = { nombre: nombre || 'Alumno fijo' };
+      fijos[di + '_' + selSlot] = { nombre: nombre || 'Alumno fijo', sede };
       saveFij();
       toast('Alumno fijo guardado para todos los ' + DIAS_L[di]);
     } else {
-      // dias custom
       const checks = document.querySelectorAll('#diasCustom input[type="checkbox"]:checked');
       checks.forEach(cb => {
-        fijos[parseInt(cb.value) + '_' + selSlot] = { nombre: nombre || 'Alumno fijo' };
+        fijos[parseInt(cb.value) + '_' + selSlot] = { nombre: nombre || 'Alumno fijo', sede };
       });
       saveFij();
       toast('Alumno fijo guardado en ' + checks.length + ' dias');
     }
   } else {
-    ocupados[sk(fk, selSlot)] = nombre ? { nombre } : true;
+    ocupados[sk(fk, selSlot)] = (nombre || sede) ? { nombre, sede } : true;
     saveOcu();
-    toast('Clase cargada');
+    toast('Clase cargada' + (sede ? ' — ' + sede : ''));
   }
   selSlot = null;
   document.getElementById('secNombre').classList.add('hidden');
