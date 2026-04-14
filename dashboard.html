@@ -1367,17 +1367,19 @@ function updateFranjaStatus() {
 
 function guardarFranja(modo) {
   if (modo==='semana') {
-    // Copiar la configuracion del dia actual a todos los dias
-    // Primero limpiar todos los dias
+    // Guardar config del día actual ANTES de limpiar
+    const snap = {};
+    for (let s=0;s<TOTAL_SLOTS;s++) {
+      const val = franjas[franjaDia+'_'+s];
+      if (val) snap[s] = val;
+    }
+    // Limpiar todos los dias
     for (let di=0;di<6;di++) {
       for (let s=0;s<TOTAL_SLOTS;s++) delete franjas[di+'_'+s];
     }
-    // Aplicar la config del dia actual a todos los dias
-    for (let s=0;s<TOTAL_SLOTS;s++) {
-      const val = franjas[franjaDia+'_'+s];
-      if (val) {
-        for (let di=0;di<6;di++) franjas[di+'_'+s] = val; // preserva la sede
-      }
+    // Aplicar snapshot a todos los dias
+    for (const [s, val] of Object.entries(snap)) {
+      for (let di=0;di<6;di++) franjas[di+'_'+s] = val;
     }
     saveFranjas();
     toast('Franjas aplicadas a toda la semana');
