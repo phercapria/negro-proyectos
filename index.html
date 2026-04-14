@@ -68,7 +68,7 @@
     }
     .hero-img {
       position:absolute; inset:0;
-      background: url('rodrigo.jpeg') center 35% / cover no-repeat;
+      background: url('rodrigo.jpeg') center 25% / cover no-repeat;
     }
     .hero-img::after {
       content:'';
@@ -393,18 +393,38 @@
       .week-arrow { width:34px; height:34px; }
       .week-arrow svg { width:14px; height:26px; }
 
-      /* Calendario mobile: 3 días */
-      .cal-wrapper { overflow-x:visible; }
-      .cal-inner   { min-width:0; }
-      .cal-header  { grid-template-columns:38px repeat(3,1fr); }
-      .cal-row     { grid-template-columns:38px repeat(3,1fr); }
-      .cal-cell    { height:44px; }
-      .time-lbl    { height:44px; font-size:.6rem; }
-      .cal-day-hdr { padding:8px 4px; }
-      .cal-day-hdr .dname { font-size:.6rem; }
-      .cal-day-hdr .dnum  { font-size:1rem; }
+      /* Hero: más zoom out en mobile para ver cara + hombros */
+      .hero-img { background-size:110%; background-position:center 18%; }
+
+      /* Calendario mobile: 3 días — FLEXBOX (más fiable en iOS Safari) */
+      .cal-wrapper { overflow:hidden; }
+      .cal-inner   { min-width:0; width:100%; }
+
+      /* Header: flex row */
+      .cal-header {
+        display:flex;
+        grid-template-columns:unset; /* cancelar grid */
+      }
+      .cal-header > div:first-child { width:38px; flex-shrink:0; }
+      .cal-day-hdr { flex:1; padding:8px 2px; }
+      .cal-day-hdr .dname { font-size:.58rem; }
+      .cal-day-hdr .dnum  { font-size:.95rem; }
+
+      /* Filas: flex row */
+      .cal-row {
+        display:flex;
+        grid-template-columns:unset; /* cancelar grid */
+      }
+      .time-lbl {
+        width:38px; flex-shrink:0; flex-grow:0;
+        height:48px; font-size:.58rem;
+      }
+      .cal-cell {
+        flex:1; height:48px;
+        min-width:0; /* evitar que flex items se expandan */
+      }
       .cal-cell.libre:hover::after,
-      .cal-cell.ocupado::after { font-size:.58rem; }
+      .cal-cell.ocupado::after { font-size:.55rem; }
       .mobile-day-nav { display:flex; }
     }
   </style>
