@@ -6,19 +6,19 @@
   <title>Rodrigo Gilabert — Tenis de Mesa</title>
   <style>
     :root {
-      --verde:        #00d97e;
-      --verde-osc:    #00b368;
-      --fondo:        #080f1a;
-      --fondo2:       #0d1a2d;
-      --fondo3:       #132033;
-      --borde:        #1e3048;
-      --texto:        #e4edf6;
-      --texto-suave:  #6a8ba8;
+      --verde:        #25d366;
+      --verde-osc:    #1ebe5b;
+      --fondo:        #000b09;
+      --fondo2:       #141414;
+      --fondo3:       #1c1c1c;
+      --borde:        #2e2e2e;
+      --texto:        #f0f0f0;
+      --texto-suave:  #888888;
       --rojo:         #ff4d4f;
-      --ocupado-bg:   #1a2635;
-      --ocupado-txt:  #3a5268;
-      --libre-bg:     rgba(0,217,126,0.07);
-      --libre-hover:  rgba(0,217,126,0.18);
+      --ocupado-bg:   #ff2d20;
+      --ocupado-txt:  #ffffff;
+      --libre-bg:     #2a2a2a;
+      --libre-hover:  #333333;
     }
     *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
     html { scroll-behavior: smooth; }
@@ -75,8 +75,8 @@
         to bottom,
         rgba(0,0,0,0.05) 0%,
         rgba(0,0,0,0.1)  40%,
-        rgba(0,0,0,0.75) 70%,
-        rgba(0,0,0,0.92) 100%
+        rgba(0,11,9,0.82) 70%,
+        rgba(0,11,9,1.00) 100%
       );
     }
     .hero-content {
@@ -102,19 +102,20 @@
     }
     .btn-hero:hover { background:var(--verde-osc); transform:translateY(-2px); }
     .hero-scroll {
-      position:absolute; bottom:24px; left:50%; transform:translateX(-50%);
-      color:rgba(255,255,255,.5); font-size:1.4rem; cursor:pointer;
-      animation:bounce 2s infinite;
-      z-index:2;
+      position:absolute; bottom:28px; left:50%; transform:translateX(-50%);
+      cursor:pointer; animation:bounce 2s infinite; z-index:2;
+      color:rgba(255,255,255,.45);
     }
+    .hero-scroll svg { display:block; }
     @keyframes bounce {
       0%,100% { transform:translateX(-50%) translateY(0); }
       50%      { transform:translateX(-50%) translateY(6px); }
     }
 
     /* ── SECCIÓN CALENDARIO ──────────────────────────── */
-    .cal-section { padding:40px 20px 64px; background:#000b09; }
-    .cal-inner-wrap { max-width:1100px; margin:0 auto; }
+    .cal-section { padding:40px 0 64px; background:#000b09; }
+    .cal-outer { position:relative; max-width:1140px; margin:0 auto; padding:0 48px; }
+    .cal-inner-wrap { background:#1e1e1e; border-radius:16px; overflow:hidden; }
     .cal-top {
       display:flex; align-items:center; justify-content:space-between;
       flex-wrap:wrap; gap:12px; margin-bottom:20px;
@@ -140,6 +141,21 @@
     .cal-wrapper { overflow-x:auto; }
     .cal-inner { min-width:680px; }
 
+    /* Flechas semana */
+    .week-arrow {
+      position:absolute; top:50%; transform:translateY(-50%);
+      width:48px; height:48px;
+      background:transparent; border:none; cursor:pointer;
+      display:flex; align-items:center; justify-content:center;
+      color:var(--verde);
+      transition:color .15s, transform .15s;
+      z-index:10;
+    }
+    .week-arrow:hover { color:var(--verde-osc); transform:translateY(-50%) scale(1.1); }
+    .week-arrow svg { display:block; }
+    .week-arrow.prev { left:0; }
+    .week-arrow.next { right:0; }
+
     /* ── MOBILE NAV DÍAS ─────────────────────────────── */
     .mobile-day-nav {
       display:none;
@@ -159,8 +175,8 @@
     /* Header días */
     .cal-header {
       display:grid; grid-template-columns:52px repeat(6,1fr);
-      background:var(--fondo2); border-radius:10px 10px 0 0;
-      border:1px solid var(--borde); border-bottom:none;
+      background:#252525;
+      border-bottom:1px solid #333;
     }
     .cal-day-hdr {
       padding:10px 6px; text-align:center;
@@ -175,20 +191,19 @@
 
     /* Filas de horas */
     .cal-body {
-      border:1px solid var(--borde); border-radius:0 0 10px 10px;
       overflow:hidden;
     }
     .cal-row { display:grid; grid-template-columns:52px repeat(6,1fr); }
-    .cal-row:not(:last-child) { border-bottom:1px solid var(--borde); }
+    .cal-row:not(:last-child) { border-bottom:1px solid #3c3c3c; }
     .time-lbl {
       font-size:.68rem; color:var(--texto-suave);
       padding:4px 6px 0 0; text-align:right;
-      border-right:1px solid var(--borde);
+      border-right:1px solid #3c3c3c;
       height:52px; display:flex; align-items:flex-start; justify-content:flex-end;
       padding-top:5px;
     }
     .cal-cell {
-      height:52px; border-right:1px solid var(--borde);
+      height:52px; border-right:1px solid #3c3c3c;
       position:relative; transition:background .15s;
     }
     .cal-cell:last-child { border-right:none; }
@@ -205,6 +220,17 @@
       position:absolute; inset:0;
       display:flex; align-items:center; justify-content:center;
       font-size:.68rem; font-weight:700; color:var(--verde);
+    }
+    .cal-cell.pendiente {
+      background:rgba(255,180,0,0.10);
+      cursor:default;
+    }
+    .cal-cell.pendiente::after {
+      content:'Pendiente';
+      position:absolute; inset:0;
+      display:flex; align-items:center; justify-content:center;
+      font-size:.65rem; color:rgba(255,180,0,0.7); font-weight:600;
+      letter-spacing:.04em;
     }
 
     .cal-cell.ocupado {
@@ -318,7 +344,7 @@
 
     /* ── FOOTER ──────────────────────────────────────── */
     footer {
-      background:var(--fondo2); border-top:1px solid var(--borde);
+      background:var(--fondo);
       padding:28px 32px; text-align:center;
       font-size:.78rem; color:var(--texto-suave);
     }
@@ -335,12 +361,18 @@
     }
     .toast.show { transform:translateY(0); opacity:1; }
 
+    /* Indicador de semana */
+
+
     /* ── RESPONSIVE ──────────────────────────────────── */
     @media(max-width:600px) {
       .site-header { padding:18px 20px; }
       .hero-headline { font-size:clamp(1.8rem,8vw,2.4rem); }
       .btn-hero { padding:14px 28px; font-size:.92rem; }
-      .cal-section { padding:20px 12px 48px; }
+      .cal-section { padding:20px 0 48px; }
+      .cal-outer { padding:0 40px; }
+      .week-arrow { width:36px; height:36px; }
+      .week-arrow svg { width:16px; height:28px; }
 
       /* Calendario mobile: 3 días */
       .cal-wrapper { overflow-x:visible; }
@@ -366,10 +398,7 @@
     <h1>Rodrigo<span>Gilabert</span></h1>
   </div>
   <div class="header-social">
-    <a href="#" aria-label="Facebook">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg>
-    </a>
-    <a href="#" aria-label="Instagram">
+    <a href="https://www.instagram.com/gila_tenisdemesa/" target="_blank" aria-label="Instagram">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
     </a>
   </div>
@@ -379,65 +408,50 @@
 <section class="hero">
   <div class="hero-img"></div>
   <div class="hero-content">
-    <h2 class="hero-headline">Subí al próximo nivel<br>en tenis de mesa</h2>
+    <h2 class="hero-headline">Subí a tu próximo nivel<br>en tenis de mesa.</h2>
     <button class="btn-hero" onclick="scrollToCalendar()">Ver disponibilidad de clases</button>
   </div>
-  <div class="hero-scroll" onclick="scrollToCalendar()">&#8964;</div>
-</section>
-
-<!-- ── INFO STRIP ── -->
-<section class="info-strip">
-  <div class="info-grid">
-    <div class="info-card">
-      <div class="ic-ico">🕐</div>
-      <div class="ic-val">Lun — Sáb</div>
-      <div class="ic-lbl">9:30 a 19:30 hs</div>
-    </div>
+  <div class="hero-scroll" onclick="scrollToCalendar()">
+    <svg width="48" height="28" viewBox="0 0 48 28" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="4,4 24,24 44,4"/>
+    </svg>
   </div>
 </section>
 
 <!-- ── CALENDARIO ── -->
 <section class="cal-section" id="calSection">
+  <div class="cal-outer">
+  <button class="week-arrow prev" onclick="cambiarSemana(-1)">
+    <svg width="22" height="36" viewBox="0 0 22 36" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="18,4 4,18 18,32"/>
+    </svg>
+  </button>
+  <button class="week-arrow next" onclick="cambiarSemana(1)">
+    <svg width="22" height="36" viewBox="0 0 22 36" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="4,4 18,18 4,32"/>
+    </svg>
+  </button>
   <div class="cal-inner-wrap">
-  <div class="cal-top">
-    <h3>📅 Disponibilidad semanal</h3>
-    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-      <div class="legend">
-        <div class="legend-item"><div class="legend-dot" style="background:rgba(0,217,126,.35);border:1px solid var(--verde)"></div> Disponible</div>
-        <div class="legend-item"><div class="legend-dot" style="background:var(--ocupado-bg);border:1px solid var(--borde)"></div> Ocupado</div>
-      </div>
-      <div class="week-nav">
-        <button class="wbtn" onclick="cambiarSemana(-1)">‹</button>
-        <div class="wlabel" id="wlabel"></div>
-        <button class="wbtn" onclick="cambiarSemana(1)">›</button>
-      </div>
-      <button class="btn btn-ghost btn-hoy" onclick="irHoy()">Hoy</button>
-    </div>
-  </div>
-
   <!-- Barra admin (visible solo en modo admin) -->
   <div class="admin-bar hidden" id="adminBar">
-    <p>🔒 Modo administrador — Hacé clic en un slot libre para marcarlo como ocupado, o en uno ocupado para liberarlo.</p>
-    <div class="admin-actions">
-      <button class="btn btn-secondary" style="font-size:.78rem;padding:6px 12px;" onclick="abrirConfigAdmin()">⚙ Configuración</button>
-      <button class="btn btn-danger"    style="font-size:.78rem;padding:6px 12px;" onclick="salirAdmin()">Salir</button>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <span style="font-size:.82rem;color:#ff8a8b;font-weight:600;">Modo administrador</span>
+      <button class="btn btn-secondary" style="font-size:.75rem;padding:5px 12px;position:relative;" onclick="abrirPendientes()">
+        Solicitudes <span id="pendBadge" style="display:none;background:#ff2d20;color:#fff;border-radius:50%;width:18px;height:18px;font-size:.65rem;font-weight:700;display:inline-flex;align-items:center;justify-content:center;margin-left:4px;" id="pendBadge">0</span>
+      </button>
+      <button class="btn btn-secondary" style="font-size:.75rem;padding:5px 12px;" onclick="abrirConfigAdmin()">Configuración</button>
+      <button class="btn btn-danger"    style="font-size:.75rem;padding:5px 12px;" onclick="salirAdmin()">Salir</button>
     </div>
   </div>
 
-  <!-- Navegación de días para mobile -->
-  <div class="mobile-day-nav" id="mobileDayNav">
-    <button class="wbtn" onclick="cambiarDiasMobile(-1)">‹</button>
-    <span class="mdlabel" id="mobileDayLabel"></span>
-    <button class="wbtn" onclick="cambiarDiasMobile(1)">›</button>
-  </div>
-
-  <div class="cal-wrapper">
+  <div class="cal-wrapper" id="calWrapper">
     <div class="cal-inner">
       <div class="cal-header" id="calHeader"></div>
       <div class="cal-body"   id="calBody"></div>
     </div>
   </div>
   </div><!-- /.cal-inner-wrap -->
+  </div><!-- /.cal-outer -->
 </section>
 
 <!-- ── MODAL: POSTULARSE ── -->
@@ -488,6 +502,58 @@
         <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
         Enviar solicitud
       </button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL: MARCAR SLOT (ADMIN) ── -->
+<div class="overlay hidden" id="modalMarcar" onclick="cerrarModal('modalMarcar',event)">
+  <div class="modal" onclick="e=>e.stopPropagation()">
+    <h3>Marcar horario</h3>
+    <div class="slot-badge" id="marcarBadge"></div>
+    <div class="form-group">
+      <label>Nombre del alumno</label>
+      <input type="text" id="marcarNombre" placeholder="Ej: Juan García" maxlength="40">
+    </div>
+    <div class="form-group">
+      <label>Tipo de clase</label>
+      <div style="display:flex;gap:10px;margin-top:6px;">
+        <label style="flex:1;display:flex;align-items:center;gap:8px;background:var(--fondo3);border:1px solid var(--borde);border-radius:10px;padding:12px;cursor:pointer;">
+          <input type="radio" name="marcarTipo" value="puntual" checked style="accent-color:var(--verde);"> Clase puntual
+        </label>
+        <label style="flex:1;display:flex;align-items:center;gap:8px;background:var(--fondo3);border:1px solid var(--borde);border-radius:10px;padding:12px;cursor:pointer;">
+          <input type="radio" name="marcarTipo" value="fijo" style="accent-color:var(--verde);"> Alumno fijo
+        </label>
+      </div>
+      <p style="font-size:.72rem;color:var(--texto-suave);margin-top:8px;" id="marcarTipoHint">Solo ocupa esta fecha.</p>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="cerrarModal('modalMarcar')">Cancelar</button>
+      <button class="btn btn-primary"   onclick="confirmarMarcar()">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL: VER SLOT OCUPADO (ADMIN) ── -->
+<div class="overlay hidden" id="modalVerOcupado" onclick="cerrarModal('modalVerOcupado',event)">
+  <div class="modal" onclick="e=>e.stopPropagation()">
+    <h3>Slot ocupado</h3>
+    <div class="slot-badge" id="verOcupBadge"></div>
+    <p id="verOcupInfo" style="font-size:.88rem;color:var(--texto-suave);margin:12px 0;"></p>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="cerrarModal('modalVerOcupado')">Cerrar</button>
+      <button class="btn btn-danger"    onclick="liberarSlotAdmin()">Liberar horario</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL: SOLICITUDES PENDIENTES (ADMIN) ── -->
+<div class="overlay hidden" id="modalPendientes" onclick="cerrarModal('modalPendientes',event)">
+  <div class="modal" style="max-width:520px;" onclick="e=>e.stopPropagation()">
+    <h3>Solicitudes pendientes</h3>
+    <div id="pendList" style="margin-top:14px;display:flex;flex-direction:column;gap:10px;max-height:60vh;overflow-y:auto;"></div>
+    <div class="modal-actions" style="margin-top:16px;">
+      <button class="btn btn-secondary" onclick="cerrarModal('modalPendientes')">Cerrar</button>
     </div>
   </div>
 </div>
@@ -547,20 +613,24 @@
 // ─── CONFIG & DATA ────────────────────────────────────────────────
 const DIAS    = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
 const DIAS_S  = ['Lun','Mar','Mié','Jue','Vie','Sáb'];
-const MIN_INI = 9*60+30;   // 9:30
-const MIN_FIN = 19*60+30;  // 19:30
+const MIN_INI = 9*60;      // 9:00
+const MIN_FIN = 19*60;     // 19:00
 const TOTAL_SLOTS = (MIN_FIN - MIN_INI) / 30; // 20 slots de 30 min
 
 const DEFAULT_CFG = {
-  wa:       '5491100000000',
+  wa:       '5491154811624',
   precio:   '$15.000',
   bio:      'Profesor profesional de tenis de mesa con más de 10 años de experiencia. Clases individuales para todos los niveles, desde principiantes hasta competidores.',
   alumnos:  '24',
   password: 'rodrigo2024',
 };
 
-let cfg       = Object.assign({}, DEFAULT_CFG, JSON.parse(localStorage.getItem('rg_cfg') || '{}'));
-let ocupados  = JSON.parse(localStorage.getItem('rg_ocu') || '{}'); // { 'YYYY-MM-DD_slot': true }
+let cfg        = Object.assign({}, DEFAULT_CFG, JSON.parse(localStorage.getItem('rg_cfg') || '{}'));
+let ocupados   = JSON.parse(localStorage.getItem('rg_ocu') || '{}'); // { 'YYYY-MM-DD_slot': true }
+let pendientes = JSON.parse(localStorage.getItem('rg_pen') || '{}'); // { 'YYYY-MM-DD_slot': {id,nombre,wa,...} }
+let fijos      = JSON.parse(localStorage.getItem('rg_fij') || '{}'); // { 'dia_slot': {nombre} }
+function guardarPen() { localStorage.setItem('rg_pen', JSON.stringify(pendientes)); }
+function guardarFij() { localStorage.setItem('rg_fij', JSON.stringify(fijos)); }
 let mobileDayStart = 0; // 0 = Lun-Mié, 3 = Jue-Sáb
 function esMobile() { return window.innerWidth <= 600; }
 
@@ -617,7 +687,9 @@ function renderCalendario() {
   const todasFechas = getFechas(semanaOff);
   const lunes = todasFechas[0], sab = todasFechas[5];
   const fmt   = d => d.toLocaleDateString('es-ES',{day:'numeric',month:'short'});
-  document.getElementById('wlabel').textContent = `${fmt(lunes)} – ${fmt(sab)}`;
+  const wlabel = document.getElementById('wlabel');
+  if (wlabel) wlabel.textContent = `${fmt(lunes)} – ${fmt(sab)}`;
+
 
   // En mobile mostramos 3 días a la vez
   const mobile = esMobile();
@@ -662,15 +734,21 @@ function renderCalendario() {
       const cell = document.createElement('div');
       const fk   = fkey(fecha);
       const sk   = slotKey(fk, s);
-      const ocup = !!ocupados[sk] || SIEMPRE_OCUPADO.some(x => x.dia === di && x.slot === s);
-      cell.className = 'cal-cell ' + (ocup ? 'ocupado' : 'libre');
+      const fijoKey = di + '_' + s;
+      const ocup  = !!ocupados[sk] || !!fijos[fijoKey] || SIEMPRE_OCUPADO.some(x => x.dia === di && x.slot === s);
+      const pend  = !ocup && !!pendientes[sk];
+      cell.className = 'cal-cell ' + (ocup ? 'ocupado' : pend ? 'pendiente' : 'libre');
+      // Tooltip con nombre en slots ocupados (admin)
+      const infoOcup = fijos[fijoKey] ? fijos[fijoKey] : (ocupados[sk] && typeof ocupados[sk]==='object' ? ocupados[sk] : null);
+      if (ocup && infoOcup && infoOcup.nombre) cell.title = infoOcup.nombre;
       cell.dataset.fecha = fk;
       cell.dataset.slot  = s;
       cell.dataset.dia   = di;
 
       if (adminMode) {
-        cell.onclick = () => toggleOcupado(fk, s, cell);
-      } else if (!ocup) {
+        if (ocup) cell.onclick = () => adminVerOcupado(fk, s, di, cell);
+        else      cell.onclick = () => adminMarcarSlot(fk, s, di, fecha);
+      } else if (!ocup && !pend) {
         cell.onclick = () => abrirPostula(fk, s, fecha, di);
       }
 
@@ -685,8 +763,10 @@ function renderCalendario() {
 }
 
 function cambiarDiasMobile(dir) {
-  mobileDayStart = mobileDayStart === 0 ? 3 : 0;
-  renderCalendario();
+  if (dir > 0 && mobileDayStart === 0) { mobileDayStart = 3; renderCalendario(); }
+  else if (dir > 0 && mobileDayStart === 3) { semanaOff++; mobileDayStart = 0; renderCalendario(); }
+  else if (dir < 0 && mobileDayStart === 3) { mobileDayStart = 0; renderCalendario(); }
+  else if (dir < 0 && mobileDayStart === 0) { semanaOff--; mobileDayStart = 3; renderCalendario(); }
 }
 
 function dibujarLineaActual(fechas) {
@@ -740,17 +820,139 @@ function actualizarDireccion() {
 }
 
 // ─── ADMIN: TOGGLE SLOT ───────────────────────────────────────────
-function toggleOcupado(fecha, slot, cell) {
+// ─── ADMIN: MARCAR SLOT ──────────────────────────────────────────
+let adminSlotSel = null;
+
+function adminMarcarSlot(fecha, slot, dia, dateObj) {
+  adminSlotSel = { fecha, slot, dia };
+  const horaStr  = slotAHora(slot);
+  const fechaStr = dateObj.toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'});
+  document.getElementById('marcarBadge').innerHTML = `<strong>${fechaStr.charAt(0).toUpperCase()+fechaStr.slice(1)}</strong> — ${horaStr} hs`;
+  document.getElementById('marcarNombre').value = '';
+  document.querySelector('input[name="marcarTipo"][value="puntual"]').checked = true;
+  document.getElementById('marcarTipoHint').textContent = 'Solo ocupa esta fecha.';
+  // Listener hint dinámico
+  document.querySelectorAll('input[name="marcarTipo"]').forEach(r => {
+    r.onchange = () => {
+      document.getElementById('marcarTipoHint').textContent =
+        r.value === 'fijo' ? 'Ocupa este horario todas las semanas.' : 'Solo ocupa esta fecha.';
+    };
+  });
+  abrirModal('modalMarcar');
+  setTimeout(() => document.getElementById('marcarNombre').focus(), 100);
+}
+
+function confirmarMarcar() {
+  const nombre = document.getElementById('marcarNombre').value.trim();
+  const tipo   = document.querySelector('input[name="marcarTipo"]:checked').value;
+  if (!adminSlotSel) return;
+  const { fecha, slot, dia } = adminSlotSel;
   const sk = slotKey(fecha, slot);
-  if (ocupados[sk]) {
-    delete ocupados[sk];
-    cell.className = 'cal-cell libre';
-    cell.onclick   = () => { /* no-op in admin — re-render handled */ toggleOcupado(fecha,slot,cell); };
+  const fk = dia + '_' + slot;
+  if (tipo === 'fijo') {
+    fijos[fk] = { nombre: nombre || 'Alumno fijo' };
+    guardarFij();
   } else {
-    ocupados[sk] = true;
-    cell.className = 'cal-cell ocupado';
+    ocupados[sk] = { nombre: nombre || 'Clase' };
+    guardarOcu();
   }
-  guardarOcu();
+  cerrarModal('modalMarcar');
+  renderCalendario();
+  toast(tipo === 'fijo' ? 'Alumno fijo registrado' : 'Clase marcada');
+}
+
+function adminVerOcupado(fecha, slot, dia, cell) {
+  adminSlotSel = { fecha, slot, dia };
+  const sk = slotKey(fecha, slot);
+  const fk = dia + '_' + slot;
+  const horaStr = slotAHora(slot);
+  const isFijo  = !!fijos[fk];
+  const info    = isFijo ? fijos[fk] : (typeof ocupados[sk] === 'object' ? ocupados[sk] : null);
+  const nombre  = info?.nombre || '—';
+  document.getElementById('verOcupBadge').innerHTML = `<strong>${horaStr} hs</strong>`;
+  document.getElementById('verOcupInfo').innerHTML =
+    `Alumno: <strong>${nombre}</strong><br>Tipo: <strong>${isFijo ? 'Fijo (todas las semanas)' : 'Puntual'}</strong>`;
+  abrirModal('modalVerOcupado');
+}
+
+function liberarSlotAdmin() {
+  if (!adminSlotSel) return;
+  const { fecha, slot, dia } = adminSlotSel;
+  const sk = slotKey(fecha, slot);
+  const fk = dia + '_' + slot;
+  delete ocupados[sk];
+  delete fijos[fk];
+  guardarOcu(); guardarFij();
+  cerrarModal('modalVerOcupado');
+  renderCalendario();
+  toast('Horario liberado');
+}
+
+// ─── ADMIN: SOLICITUDES PENDIENTES ──────────────────────────────
+function actualizarBadgePendientes() {
+  const count = Object.keys(pendientes).length;
+  const badge = document.getElementById('pendBadge');
+  if (!badge) return;
+  badge.textContent = count;
+  badge.style.display = count > 0 ? 'inline-flex' : 'none';
+}
+
+function abrirPendientes() {
+  const list = document.getElementById('pendList');
+  const pens = Object.entries(pendientes);
+  if (pens.length === 0) {
+    list.innerHTML = '<p style="color:var(--texto-suave);font-size:.85rem;">No hay solicitudes pendientes.</p>';
+  } else {
+    list.innerHTML = pens.map(([sk, p]) => {
+      const hora = slotAHora(p.slot);
+      const fecha = new Date(p.fecha + 'T00:00:00').toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'});
+      return `<div style="background:var(--fondo3);border:1px solid var(--borde);border-radius:10px;padding:14px;">
+        <div style="font-weight:700;margin-bottom:4px;">${p.nombre}</div>
+        <div style="font-size:.78rem;color:var(--texto-suave);margin-bottom:8px;">
+          ${fecha.charAt(0).toUpperCase()+fecha.slice(1)} — ${hora} hs<br>
+          Sede: ${p.sede} &nbsp;·&nbsp; Nivel: ${p.nivel}<br>
+          WA: +54 9 ${p.wa}${p.nota ? '<br>Nota: '+p.nota : ''}
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-danger" style="font-size:.75rem;padding:5px 12px;" onclick="rechazarSolicitud('${sk}')">Rechazar</button>
+          <button class="btn btn-secondary" style="font-size:.75rem;padding:5px 12px;" onclick="aprobarComoFijo('${sk}')">Confirmar fijo</button>
+          <button class="btn btn-primary" style="font-size:.75rem;padding:5px 12px;" onclick="aprobarSolicitud('${sk}')">Confirmar</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+  abrirModal('modalPendientes');
+}
+
+function aprobarSolicitud(sk) {
+  if (!pendientes[sk]) return;
+  const p = pendientes[sk];
+  ocupados[sk] = { nombre: p.nombre };
+  delete pendientes[sk];
+  guardarOcu(); guardarPen();
+  abrirPendientes(); renderCalendario();
+  actualizarBadgePendientes();
+  toast('Clase confirmada');
+}
+
+function aprobarComoFijo(sk) {
+  if (!pendientes[sk]) return;
+  const p = pendientes[sk];
+  const fk = p.dia + '_' + p.slot;
+  fijos[fk] = { nombre: p.nombre };
+  delete pendientes[sk];
+  guardarFij(); guardarPen();
+  abrirPendientes(); renderCalendario();
+  actualizarBadgePendientes();
+  toast('Alumno fijo registrado');
+}
+
+function rechazarSolicitud(sk) {
+  delete pendientes[sk];
+  guardarPen();
+  abrirPendientes(); renderCalendario();
+  actualizarBadgePendientes();
+  toast('Solicitud rechazada');
 }
 
 // ─── MODAL: POSTULARSE ────────────────────────────────────────────
@@ -849,6 +1051,7 @@ function loginAdmin() {
     cerrarModal('modalAdmin');
     document.getElementById('adminBar').classList.remove('hidden');
     document.getElementById('calBody').classList.add('admin-mode');
+    actualizarBadgePendientes();
     renderCalendario();
     toast('Modo admin activado');
   } else {
@@ -920,17 +1123,73 @@ function cerrarModal(id, e) {
 }
 
 // ─── INIT ─────────────────────────────────────────────────────────
+function procesarAccionURL() {
+  const params = new URLSearchParams(window.location.search);
+  const accion = params.get('accion');
+  const sk     = params.get('sk');
+  if (!accion || !sk) return;
+
+  // Limpiar URL sin recargar
+  window.history.replaceState({}, '', window.location.pathname);
+
+  if (accion === 'aprobar' && pendientes[sk]) {
+    ocupados[sk] = true;
+    delete pendientes[sk];
+    guardarOcu(); guardarPen();
+    renderCalendario();
+    toast('Clase confirmada y horario marcado como ocupado');
+  } else if (accion === 'rechazar' && pendientes[sk]) {
+    delete pendientes[sk];
+    guardarPen();
+    renderCalendario();
+    toast('Solicitud rechazada, horario liberado');
+  }
+}
+
 function init() {
   renderInfo();
+  procesarAccionURL();
   renderCalendario();
-  // Actualizar línea cada minuto
   setInterval(() => { if (semanaOff === 0) renderCalendario(); }, 60000);
-  // Re-render al cambiar tamaño de ventana (mobile ↔ desktop)
+
+  // Re-render al resize
   let resizeTimer;
   window.addEventListener('resize', () => {
     clearTimeout(resizeTimer);
     resizeTimer = setTimeout(renderCalendario, 150);
   });
+
+  // ── SWIPE / WHEEL PARA CAMBIAR SEMANA ──────────────────
+  const wrapper = document.getElementById('calWrapper');
+
+  // Touch swipe
+  let touchX = null;
+  wrapper.addEventListener('touchstart', e => { touchX = e.touches[0].clientX; }, { passive:true });
+  wrapper.addEventListener('touchend', e => {
+    if (touchX === null) return;
+    const dx = e.changedTouches[0].clientX - touchX;
+    touchX = null;
+    if (Math.abs(dx) < 40) return;
+    if (esMobile()) {
+      cambiarDiasMobile(dx < 0 ? 1 : -1);
+    } else {
+      cambiarSemana(dx < 0 ? 1 : -1);
+    }
+  }, { passive:true });
+
+  // Mouse wheel horizontal (trackpad o scroll lateral)
+  let wheelTimer = null;
+  wrapper.addEventListener('wheel', e => {
+    if (Math.abs(e.deltaX) < Math.abs(e.deltaY)) return; // scroll vertical = ignorar
+    e.preventDefault();
+    if (wheelTimer) return;
+    wheelTimer = setTimeout(() => { wheelTimer = null; }, 400);
+    if (esMobile()) {
+      cambiarDiasMobile(e.deltaX > 0 ? 1 : -1);
+    } else {
+      cambiarSemana(e.deltaX > 0 ? 1 : -1);
+    }
+  }, { passive:false });
 }
 
 init();
