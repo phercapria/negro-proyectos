@@ -409,7 +409,7 @@
         </label>
         <label style="display:flex;align-items:center;gap:10px;padding:11px 14px;background:var(--fondo3);border:1.5px solid var(--borde);border-radius:10px;cursor:pointer;">
           <input type="radio" name="fijoRep" value="custom" style="accent-color:var(--verde);width:16px;height:16px;" onchange="toggleDiasCustom(this)">
-          <span style="font-size:.88rem;font-weight:600;">Elegir dias especificos</span>
+          <span style="font-size:.88rem;font-weight:600;">Agregar más días y horarios fijos</span>
         </label>
       </div>
       <div id="diasCustom" class="hidden" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;">
@@ -671,7 +671,7 @@ function acUpdate() {
     .slice(0, 6);
   if (!matches.length) { list.classList.add('hidden'); return; }
   list.innerHTML = matches.map(a =>
-    `<div class="ac-item" onmousedown="acSelect(${JSON.stringify(a.id)}, ${JSON.stringify(a.nombre)})">
+    `<div class="ac-item" onmousedown="event.preventDefault(); acSelect(${JSON.stringify(a.id)}, ${JSON.stringify(a.nombre)})">
       ${a.nombre}${a.wa ? '<span style="font-size:.73rem;color:var(--suave);margin-left:8px;">'+a.wa+'</span>' : ''}
     </div>`
   ).join('');
@@ -760,7 +760,7 @@ function elegirFecha(d, chip, preSlot) {
   document.getElementById('secSlot').classList.remove('hidden');
   document.getElementById('secNombre').classList.add('hidden');
   const fijoLabel = document.getElementById('fijoOptDiaLabel');
-  if (fijoLabel) fijoLabel.textContent = 'Todos los ' + DIAS_L[diIdx(d)];
+  if (fijoLabel) fijoLabel.textContent = 'Todos los ' + DIAS_L[diIdx(d)] + ' (elegí el horario)';
   // Si viene con slot pre-seleccionado (desde el calendario), clickearlo automáticamente
   if (preSlot !== undefined && preSlot !== null) {
     const horaTarget = hora(preSlot);
@@ -800,6 +800,9 @@ function renderSlots() {
         acSelectedId = null;
         document.getElementById('secNombre').classList.remove('hidden');
         document.getElementById('secNombre').scrollIntoView({behavior:'smooth',block:'nearest'});
+        // Actualizar label de fijo con dia + horario
+        const fijoLbl = document.getElementById('fijoOptDiaLabel');
+        if (fijoLbl && selDate) fijoLbl.textContent = 'Todos los ' + DIAS_L[diIdx(selDate)] + ' a las ' + hora(s);
       };
     }
     grid.appendChild(btn);
