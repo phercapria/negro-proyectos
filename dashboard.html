@@ -708,6 +708,48 @@
 </nav>
 
 <script>
+// ── FIREBASE SYNC ─────────────────────────────────────────────────
+const FB_DB   = 'https://rodrigo-gilabert-default-rtdb.firebaseio.com/rg';
+const FB_KEYS = ['rg_ocu','rg_pen','rg_fij','rg_cfg','rg_franjas','rg_alumnos'];
+const _lsSet  = Storage.prototype.setItem; // captura el original antes de overridearlo
+
+async function fbPull() {
+  try {
+    const r = await fetch(FB_DB + '.json');
+    if (!r.ok) return;
+    const data = await r.json();
+    if (!data) return;
+    for (const k of FB_KEYS) {
+      if (data[k] != null) _lsSet.call(localStorage, k, data[k]);
+    }
+  } catch(e) { console.warn('fbPull:', e); }
+}
+
+let _fbTimer = null;
+async function fbPush() {
+  clearTimeout(_fbTimer);
+  _fbTimer = setTimeout(async () => {
+    const data = {};
+    for (const k of FB_KEYS) {
+      const v = localStorage.getItem(k);
+      if (v != null) data[k] = v;
+    }
+    try {
+      await fetch(FB_DB + '.json', {
+        method: 'PATCH',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify(data)
+      });
+    } catch(e) { console.warn('fbPush:', e); }
+  }, 600);
+}
+
+// Auto-push a Firebase en cada escritura de localStorage
+Storage.prototype.setItem = function(key, value) {
+  _lsSet.call(this, key, value);
+  if (FB_KEYS.includes(key)) fbPush();
+};
+
 // ── AUTH ──────────────────────────────────────────────────────────
 if (sessionStorage.getItem('rg_admin_auth') !== '1') { window.location.href = '/admin'; }
 const adminUser = sessionStorage.getItem('rg_admin_user') || 'admin';
@@ -1669,7 +1711,15 @@ function toggleDiasCustom(radio) {
 }
 
 // ── INIT ──────────────────────────────────────────────────────────
-renderHome();
+(async () => {
+  await fbPull();
+  ocupados   = JSON.parse(localStorage.getItem('rg_ocu')     || '{}');
+  pendientes = JSON.parse(localStorage.getItem('rg_pen')     || '{}');
+  fijos      = JSON.parse(localStorage.getItem('rg_fij')     || '{}');
+  franjas    = JSON.parse(localStorage.getItem('rg_franjas') || '{}');
+  alumnos    = JSON.parse(localStorage.getItem('rg_alumnos') || '{}');
+  renderHome();
+})();
 </script>
 </body>
 </html>

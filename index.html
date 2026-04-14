@@ -608,6 +608,23 @@
 <div class="toast" id="toast"></div>
 
 <script>
+// ── FIREBASE SYNC (solo lectura) ──────────────────────────────────
+const FB_DB   = 'https://rodrigo-gilabert-default-rtdb.firebaseio.com/rg';
+const FB_KEYS = ['rg_ocu','rg_pen','rg_fij','rg_cfg','rg_franjas','rg_alumnos'];
+
+async function fbPull() {
+  try {
+    const r = await fetch(FB_DB + '.json');
+    if (!r.ok) return;
+    const data = await r.json();
+    if (!data) return;
+    const _s = Storage.prototype.setItem;
+    for (const k of FB_KEYS) {
+      if (data[k] != null) _s.call(localStorage, k, data[k]);
+    }
+  } catch(e) { console.warn('fbPull:', e); }
+}
+
 // ─── CONFIG & DATA ────────────────────────────────────────────────
 const DIAS    = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
 const DIAS_S  = ['Lun','Mar','Mié','Jue','Vie','Sáb'];
@@ -1080,7 +1097,15 @@ function init() {
   }, { passive:false });
 }
 
-init();
+(async () => {
+  await fbPull();
+  cfg        = Object.assign({}, DEFAULT_CFG, JSON.parse(localStorage.getItem('rg_cfg') || '{}'));
+  ocupados   = JSON.parse(localStorage.getItem('rg_ocu')     || '{}');
+  pendientes = JSON.parse(localStorage.getItem('rg_pen')     || '{}');
+  fijos      = JSON.parse(localStorage.getItem('rg_fij')     || '{}');
+  franjas    = JSON.parse(localStorage.getItem('rg_franjas') || '{}');
+  init();
+})();
 </script>
 </body>
 </html>
