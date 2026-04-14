@@ -154,15 +154,55 @@
     .month-grid-wrap { padding:0 14px 20px; }
     .month-hdr { display:grid; grid-template-columns:repeat(7,1fr); margin-bottom:4px; }
     .month-dname { text-align:center; font-size:.62rem; color:var(--suave); font-weight:700; padding:4px 0; }
-    .month-body { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; }
-    .mcell { aspect-ratio:1; border-radius:8px; background:#0e0e0e; display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:.8rem; font-weight:600; cursor:pointer; position:relative; transition:background .12s; }
+    .month-body { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; align-items:start; }
+
+    /* ── CELDA MES ── */
+    .mcell {
+      min-height:76px;
+      border-radius:8px; background:#0e0e0e;
+      display:flex; flex-direction:column;
+      align-items:stretch; justify-content:flex-start;
+      cursor:pointer; position:relative;
+      transition:background .12s;
+      overflow:hidden; padding:5px 4px 4px;
+      gap:2px;
+    }
     .mcell:hover:not(.dom):not(.otro) { background:#1a1a1a; }
-    .mcell.today { border:2px solid var(--verde); }
-    .mcell.otro { opacity:.25; cursor:default; }
-    .mcell.dom  { opacity:.18; cursor:default; }
-    .mcell.hiOcu  { background:rgba(255,45,32,.16); }
-    .mcell.midOcu { background:rgba(255,180,0,.1); }
-    .mcell .mdot { position:absolute; bottom:3px; width:5px; height:5px; border-radius:50%; }
+    .mcell.today .mcell-num {
+      background:var(--verde); color:#000;
+      border-radius:50%;
+      width:22px; height:22px;
+      display:inline-flex; align-items:center; justify-content:center;
+    }
+    .mcell.otro { opacity:.2; cursor:default; }
+    .mcell.dom  { opacity:.15; cursor:default; }
+    .mcell-num {
+      font-size:.75rem; font-weight:700; color:var(--suave);
+      margin-bottom:3px; padding:0 2px;
+      line-height:1;
+    }
+    /* Bloque de evento */
+    .mev {
+      border-radius:4px;
+      padding:3px 5px;
+      font-size:.6rem; font-weight:700;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+      line-height:1.3;
+    }
+    .mev.ocu  { background:rgba(255,55,40,.28);  color:#ffb3ae; }
+    .mev.fijo { background:rgba(255,120,95,.22); color:rgba(255,155,130,.95); }
+    .mev.pend { background:rgba(255,180,0,.18);  color:rgba(255,200,80,.95); }
+    .mcell-more {
+      font-size:.56rem; color:#555; font-weight:600;
+      padding:1px 5px;
+    }
+    /* Ocultar texto de eventos en pantallas muy pequeñas, solo mostrar color */
+    @media(max-width:480px) {
+      .mev { font-size:0; padding:4px 3px; border-radius:3px; }
+      .mcell-more { display:none; }
+      .mcell { min-height:52px; }
+      .mcell-num { font-size:.68rem; }
+    }
 
     /* ── FRANJAS ── */
     .day-tabs { display:flex; gap:6px; padding:14px 20px; overflow-x:auto; border-bottom:1px solid var(--borde); scrollbar-width:none; }
@@ -1112,27 +1152,52 @@ function renderMes() {
   document.getElementById('mesLabel').textContent=`${MESES[base.getMonth()]} ${base.getFullYear()}`;
   const primerDia=(base.getDay()+6)%7, diasMes=new Date(base.getFullYear(),base.getMonth()+1,0).getDate();
   const body=document.getElementById('monthBody'); body.innerHTML='';
+
+  // Celdas vacías al inicio del mes
   for (let i=0;i<primerDia;i++){const e=document.createElement('div');e.className='mcell otro';body.appendChild(e);}
+
   for (let day=1;day<=diasMes;day++) {
     const d=new Date(base.getFullYear(),base.getMonth(),day);
     const di=(d.getDay()+6)%7, fk=fkey(d);
     const esH=d.getTime()===hoy.getTime(), esD=d.getDay()===0;
-    let ocuCnt=0; const nombres=[];
+
+    // Recolectar eventos del día
+    const eventos=[];
     for (let s=0;s<TOTAL_SLOTS;s++){
-      if(esOcupado(fk,s,di)){
-        ocuCnt++;
-        const fij=fijos[di+'_'+s], ocuV=ocupados[sk(fk,s)];
-        const n=(fij&&fij.nombre)||(ocuV&&ocuV.nombre)||null;
-        if(n) nombres.push(hora(s)+' '+n);
-      }
+      const fij=fijos[di+'_'+s], ocuV=ocupados[sk(fk,s)], pendV=pendientes[sk(fk,s)];
+      if (fij)        eventos.push({tipo:'fijo', hora:hora(s), nombre:fij.nombre||'Fijo'});
+      else if (ocuV)  eventos.push({tipo:'ocu',  hora:hora(s), nombre:(ocuV.nombre||'Ocupado')});
+      else if (pendV) eventos.push({tipo:'pend', hora:hora(s), nombre:(pendV.nombre||'Pendiente')});
     }
-    const pct=ocuCnt/TOTAL_SLOTS;
+
     const cell=document.createElement('div');
-    cell.className='mcell'+(esH?' today':'')+(esD?' dom':'')+(pct>.5?' hiOcu':pct>.2?' midOcu':'');
-    cell.textContent=day;
-    if(nombres.length) cell.title=nombres.join('\n');
-    if (!esD&&ocuCnt>0){const dot=document.createElement('div');dot.className='mdot';dot.style.background=pct>.5?'var(--rojo)':'var(--amarillo)';cell.appendChild(dot);}
-    if (!esD) {
+    cell.className='mcell'+(esH?' today':'')+(esD?' dom':'');
+
+    // Número del día
+    const numDiv=document.createElement('div');
+    numDiv.className='mcell-num';
+    numDiv.textContent=day;
+    cell.appendChild(numDiv);
+
+    // Bloques de eventos (máx 3 visibles)
+    const MAX_EV=3;
+    const visibles=eventos.slice(0,MAX_EV);
+    visibles.forEach(ev=>{
+      const b=document.createElement('div');
+      b.className='mev '+ev.tipo;
+      b.textContent=ev.hora+' '+ev.nombre;
+      cell.appendChild(b);
+    });
+    if (eventos.length>MAX_EV){
+      const m=document.createElement('div');
+      m.className='mcell-more';
+      m.textContent='+'+(eventos.length-MAX_EV)+' más';
+      cell.appendChild(m);
+    }
+
+    if (eventos.length) cell.title=eventos.map(ev=>ev.hora+' '+ev.nombre).join('\n');
+
+    if (!esD){
       cell.onclick=()=>{
         const hoyRef=new Date();hoyRef.setHours(0,0,0,0);
         diaOff=Math.round((d-hoyRef)/86400000);if(diaOff<0)diaOff=0;
