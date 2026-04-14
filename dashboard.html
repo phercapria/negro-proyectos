@@ -213,8 +213,12 @@
     .fpre { padding:7px 14px; border-radius:20px; border:1px solid var(--borde); background:var(--fondo3); color:var(--suave); font-size:.75rem; font-weight:600; cursor:pointer; font-family:inherit; transition:all .15s; }
     .fpre:hover { border-color:var(--amarillo); color:var(--amarillo); }
     .franja-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:20px; }
-    .fbtn { padding:12px 6px; border-radius:10px; border:1.5px solid var(--borde); background:var(--fondo3); color:#666; font-size:.82rem; font-weight:600; cursor:pointer; text-align:center; transition:all .12s; font-family:inherit; }
+    .fbtn { padding:12px 6px; border-radius:10px; border:1.5px solid var(--borde); background:var(--fondo3); color:#666; font-size:.78rem; font-weight:600; cursor:pointer; text-align:center; transition:all .12s; font-family:inherit; line-height:1.3; }
     .fbtn.on { background:rgba(255,180,0,.15); border-color:rgba(255,180,0,.6); color:var(--amarillo); }
+    .sede-sel-row { display:flex; gap:8px; align-items:center; margin:10px 0 14px; }
+    .sede-sel-row span { font-size:.72rem; color:var(--suave); font-weight:600; white-space:nowrap; }
+    .sede-sel-btn { padding:6px 14px; border-radius:20px; border:1.5px solid var(--borde); background:var(--fondo3); color:#666; font-size:.75rem; font-weight:700; cursor:pointer; font-family:inherit; transition:all .15s; display:flex; align-items:center; gap:5px; }
+    .sede-sel-btn.active { background:rgba(56,230,150,.12); border-color:rgba(56,230,150,.5); color:var(--verde); }
     .franja-apply { display:flex; gap:8px; }
     .btn-apply { flex:1; padding:12px; border-radius:10px; border:1.5px solid var(--borde); background:var(--fondo3); color:var(--suave); font-size:.8rem; font-weight:700; cursor:pointer; font-family:inherit; transition:all .15s; text-align:center; }
     .btn-apply.primary { background:var(--amarillo); border-color:rgba(255,180,0,.7); color:#000; }
@@ -543,6 +547,17 @@
       <button class="fpre" onclick="presetFranjas('todo')">Todo el dia</button>
       <button class="fpre" onclick="presetFranjas('ninguno')">Ninguno</button>
     </div>
+    <div class="sede-sel-row">
+      <span>Sede del día:</span>
+      <button id="sedeBtnKp" class="sede-sel-btn active" onclick="setSedeFranja('kp')">
+        <svg width="11" height="14" viewBox="0 0 24 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+        King Pong
+      </button>
+      <button id="sedeBtnYb" class="sede-sel-btn" onclick="setSedeFranja('yb')">
+        <svg width="11" height="14" viewBox="0 0 24 30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+        Yabrudense
+      </button>
+    </div>
     <div class="franja-grid" id="franjaGrid"></div>
     <div class="franja-apply">
       <button class="btn-apply primary" onclick="guardarFranja('dia')">Guardar este dia</button>
@@ -711,21 +726,28 @@
 // ── FIREBASE SYNC ─────────────────────────────────────────────────
 const FB_DB   = 'https://rodrigo-gilabert-default-rtdb.firebaseio.com/rg';
 const FB_KEYS = ['rg_ocu','rg_pen','rg_fij','rg_cfg','rg_franjas','rg_alumnos'];
-const _lsSet  = Storage.prototype.setItem; // captura el original antes de overridearlo
+const _lsSet  = Storage.prototype.setItem;
+let _fbKnown  = null;
+let _fbTimer  = null;
 
+// Pull desde Firebase; retorna true si los datos cambiaron
 async function fbPull() {
   try {
     const r = await fetch(FB_DB + '.json');
-    if (!r.ok) return;
+    if (!r.ok) return false;
     const data = await r.json();
-    if (!data) return;
+    if (!data) return false;
+    const json = JSON.stringify(data);
+    const changed = json !== _fbKnown;
+    _fbKnown = json;
     for (const k of FB_KEYS) {
       if (data[k] != null) _lsSet.call(localStorage, k, data[k]);
     }
-  } catch(e) { console.warn('fbPull:', e); }
+    return changed;
+  } catch(e) { console.warn('fbPull:', e); return false; }
 }
 
-let _fbTimer = null;
+// Push a Firebase (debounced 600ms)
 async function fbPush() {
   clearTimeout(_fbTimer);
   _fbTimer = setTimeout(async () => {
@@ -740,11 +762,12 @@ async function fbPush() {
         headers: {'Content-Type':'application/json'},
         body: JSON.stringify(data)
       });
+      _fbKnown = JSON.stringify(data); // evita falsa detección en el próximo poll
     } catch(e) { console.warn('fbPush:', e); }
   }, 600);
 }
 
-// Auto-push a Firebase en cada escritura de localStorage
+// Auto-push en cada escritura de localStorage
 Storage.prototype.setItem = function(key, value) {
   _lsSet.call(this, key, value);
   if (FB_KEYS.includes(key)) fbPush();
@@ -850,7 +873,9 @@ function esPendiente(fk,s) { return !!pendientes[sk(fk,s)]; }
 
 // ── NAVEGACION ────────────────────────────────────────────────────
 let calTab = 'dia';
+let currentView = 'home';
 function ir(v) {
+  currentView = v;
   document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
   document.getElementById('view'+v.charAt(0).toUpperCase()+v.slice(1)).classList.add('active');
   document.querySelectorAll('.bnav-btn').forEach(b=>b.classList.remove('active'));
@@ -1254,7 +1279,14 @@ function renderMes() {
 }
 
 // ── FRANJAS HORARIAS ─────────────────────────────────────────────
-let franjaDia = 0; // dia activo en la vista franjas (0=Lun…5=Sab)
+let franjaDia  = 0; // dia activo en la vista franjas (0=Lun…5=Sab)
+let franjaSede = {}; // sede seleccionada por dia { 0:'kp', 1:'yb', ... }
+
+function setSedeFranja(code) {
+  franjaSede[franjaDia] = code;
+  document.getElementById('sedeBtnKp').classList.toggle('active', code === 'kp');
+  document.getElementById('sedeBtnYb').classList.toggle('active', code === 'yb');
+}
 
 function renderFranjas() {
   // Construir tabs de dias
@@ -1270,17 +1302,38 @@ function renderFranjas() {
   renderFranjaGrid();
 }
 
+function sedeLabel(val) {
+  if (val === 'yb') return ' · YB';
+  if (val === 'kp' || val === true) return ' · KP';
+  return '';
+}
+
 function renderFranjaGrid() {
-  const grid=document.getElementById('franjaGrid'); grid.innerHTML='';
-  for (let s=0;s<TOTAL_SLOTS;s++) {
-    const on=!!franjas[franjaDia+'_'+s];
-    const btn=document.createElement('button');
-    btn.className='fbtn'+(on?' on':'');
-    btn.textContent=hora(s);
-    btn.onclick=()=>{
-      const key=franjaDia+'_'+s;
-      if (franjas[key]) delete franjas[key]; else franjas[key]=true;
-      btn.classList.toggle('on', !!franjas[key]);
+  const grid = document.getElementById('franjaGrid'); grid.innerHTML = '';
+  // Sincronizar UI del selector de sede
+  const sedeAct = franjaSede[franjaDia] || 'kp';
+  const bKp = document.getElementById('sedeBtnKp');
+  const bYb = document.getElementById('sedeBtnYb');
+  if (bKp) bKp.classList.toggle('active', sedeAct === 'kp');
+  if (bYb) bYb.classList.toggle('active', sedeAct === 'yb');
+
+  for (let s = 0; s < TOTAL_SLOTS; s++) {
+    const val = franjas[franjaDia+'_'+s]; // 'kp', 'yb', true, o undefined
+    const on  = !!val;
+    const btn = document.createElement('button');
+    btn.className = 'fbtn' + (on ? ' on' : '');
+    btn.textContent = hora(s) + sedeLabel(val);
+    btn.onclick = () => {
+      const key = franjaDia+'_'+s;
+      if (franjas[key]) {
+        delete franjas[key];
+        btn.classList.remove('on');
+        btn.textContent = hora(s);
+      } else {
+        franjas[key] = franjaSede[franjaDia] || 'kp';
+        btn.classList.add('on');
+        btn.textContent = hora(s) + sedeLabel(franjas[key]);
+      }
     };
     grid.appendChild(btn);
   }
@@ -1296,7 +1349,7 @@ function presetFranjas(tipo) {
     if (tipo==='tarde')   on=(h>=15*60&&h<19*60);
     if (tipo==='todo')    on=true;
     if (tipo==='ninguno') on=false;
-    if (on) franjas[key]=true; else delete franjas[key];
+    if (on) franjas[key] = franjaSede[franjaDia] || 'kp'; else delete franjas[key];
   }
   renderFranjaGrid();
 }
@@ -1321,8 +1374,9 @@ function guardarFranja(modo) {
     }
     // Aplicar la config del dia actual a todos los dias
     for (let s=0;s<TOTAL_SLOTS;s++) {
-      if (franjas[franjaDia+'_'+s]) {
-        for (let di=0;di<6;di++) franjas[di+'_'+s]=true;
+      const val = franjas[franjaDia+'_'+s];
+      if (val) {
+        for (let di=0;di<6;di++) franjas[di+'_'+s] = val; // preserva la sede
       }
     }
     saveFranjas();
@@ -1711,14 +1765,26 @@ function toggleDiasCustom(radio) {
 }
 
 // ── INIT ──────────────────────────────────────────────────────────
-(async () => {
-  await fbPull();
+function recargarVars() {
   ocupados   = JSON.parse(localStorage.getItem('rg_ocu')     || '{}');
   pendientes = JSON.parse(localStorage.getItem('rg_pen')     || '{}');
   fijos      = JSON.parse(localStorage.getItem('rg_fij')     || '{}');
   franjas    = JSON.parse(localStorage.getItem('rg_franjas') || '{}');
   alumnos    = JSON.parse(localStorage.getItem('rg_alumnos') || '{}');
+}
+(async () => {
+  await fbPull();
+  recargarVars();
   renderHome();
+  // Poll Firebase cada 15s para detectar cambios de otros dispositivos
+  setInterval(async () => {
+    const changed = await fbPull();
+    if (!changed) return;
+    recargarVars();
+    const fns = { home:renderHome, calendario:renderCalendario, franjas:renderFranjas, solicitudes:renderSolicitudes, alumnos:showAluList, cargar:renderCargar };
+    const fn = fns[currentView];
+    if (fn) fn();
+  }, 15000);
 })();
 </script>
 </body>

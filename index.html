@@ -276,6 +276,34 @@
       letter-spacing:.04em;
     }
 
+    /* Badge de sede en celdas disponibles */
+    .sede-badge {
+      position:absolute; bottom:3px; right:4px;
+      font-size:.5rem; font-weight:900; color:var(--verde);
+      opacity:.75; letter-spacing:.06em; pointer-events:none;
+    }
+
+    /* ── PINES DE SEDES ── */
+    .sedes-strip {
+      background:#000b09; padding:0 48px 48px;
+      max-width:clamp(1000px,90vw,1500px); margin:0 auto;
+      display:flex; gap:20px; flex-wrap:wrap;
+    }
+    .sede-pin {
+      display:flex; align-items:flex-start; gap:13px;
+      background:#0d1410; border:1px solid #1a2e22; border-radius:14px;
+      padding:16px 20px; flex:1; min-width:220px;
+    }
+    .pin-ico { color:var(--verde); flex-shrink:0; margin-top:2px; }
+    .sede-pin strong { display:block; font-size:.95rem; color:#fff; margin-bottom:3px; }
+    .sede-pin .pin-dir { display:block; font-size:.8rem; color:#888; margin-bottom:7px; }
+    .sede-pin a { font-size:.78rem; color:var(--verde); text-decoration:none; font-weight:700; }
+    .sede-pin a:hover { text-decoration:underline; }
+    @media(max-width:767px) {
+      .sedes-strip { padding:0 16px 36px; gap:12px; }
+      .sede-pin { min-width:unset; width:100%; }
+    }
+
     /* Línea hora actual */
     .now-line {
       position:absolute; left:0; right:0; height:2px; background:var(--rojo); pointer-events:none; z-index:5;
@@ -525,6 +553,32 @@
   </div><!-- /.cal-outer -->
 </section>
 
+<!-- ── PINES DE SEDES ── -->
+<div class="sedes-strip">
+  <div class="sede-pin">
+    <svg class="pin-ico" width="20" height="26" viewBox="0 0 24 30" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+      <circle cx="12" cy="9" r="2.5"/>
+    </svg>
+    <div>
+      <strong>King Pong</strong>
+      <span class="pin-dir">Luis Viale 526, CABA</span>
+      <a href="https://maps.google.com/?q=Luis+Viale+526+CABA" target="_blank">Ver en mapa ↗</a>
+    </div>
+  </div>
+  <div class="sede-pin">
+    <svg class="pin-ico" width="20" height="26" viewBox="0 0 24 30" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+      <circle cx="12" cy="9" r="2.5"/>
+    </svg>
+    <div>
+      <strong>Yabrudense</strong>
+      <span class="pin-dir">Alberti 1541, CABA</span>
+      <a href="https://maps.google.com/?q=Alberti+1541+CABA" target="_blank">Ver en mapa ↗</a>
+    </div>
+  </div>
+</div>
+
 <!-- ── MODAL: POSTULARSE ── -->
 <div class="overlay hidden" id="modalPostula" onclick="cerrarModal('modalPostula',event)">
   <div class="modal" onclick="e=>e.stopPropagation()">
@@ -611,18 +665,24 @@
 // ── FIREBASE SYNC (solo lectura) ──────────────────────────────────
 const FB_DB   = 'https://rodrigo-gilabert-default-rtdb.firebaseio.com/rg';
 const FB_KEYS = ['rg_ocu','rg_pen','rg_fij','rg_cfg','rg_franjas','rg_alumnos'];
+const _lsSet  = Storage.prototype.setItem;
+let _fbKnown  = null;
 
+// Retorna true si los datos cambiaron
 async function fbPull() {
   try {
     const r = await fetch(FB_DB + '.json');
-    if (!r.ok) return;
+    if (!r.ok) return false;
     const data = await r.json();
-    if (!data) return;
-    const _s = Storage.prototype.setItem;
+    if (!data) return false;
+    const json = JSON.stringify(data);
+    const changed = json !== _fbKnown;
+    _fbKnown = json;
     for (const k of FB_KEYS) {
-      if (data[k] != null) _s.call(localStorage, k, data[k]);
+      if (data[k] != null) _lsSet.call(localStorage, k, data[k]);
     }
-  } catch(e) { console.warn('fbPull:', e); }
+    return changed;
+  } catch(e) { console.warn('fbPull:', e); return false; }
 }
 
 // ─── CONFIG & DATA ────────────────────────────────────────────────
@@ -777,7 +837,15 @@ function renderCalendario() {
       cell.dataset.slot  = s;
       cell.dataset.dia   = di;
 
+      // Badge de sede en celdas disponibles
       if (!ocup && !pend && !bloq) {
+        const sedeVal = franjas[di + '_' + s];
+        if (sedeVal && sedeVal !== true) {
+          const badge = document.createElement('span');
+          badge.className = 'sede-badge';
+          badge.textContent = sedeVal === 'yb' ? 'YB' : 'KP';
+          cell.appendChild(badge);
+        }
         cell.onclick = () => abrirPostula(fk, s, fecha, di);
       }
 
@@ -931,6 +999,17 @@ function abrirPostula(fecha, slot, dateObj, diaIdx) {
   const p1 = parsePrecioNum(cfg.precio);
   const durDisplay = document.getElementById('duracionDisplay');
   if (durDisplay) durDisplay.textContent = p1 ? `1 hora — ${formatPrecio(p1)}` : '1 hora';
+  // Pre-seleccionar sede si el slot tiene una asignada
+  const sedeVal = franjas[slotSel.diaIdx + '_' + slotSel.slot];
+  const sedeMap = { kp: 'King Pong', yb: 'Yabrudense' };
+  const sedeEl  = document.getElementById('postSede');
+  if (sedeEl && sedeVal && sedeMap[sedeVal]) {
+    sedeEl.value = sedeMap[sedeVal];
+    actualizarDireccion();
+  } else if (sedeEl) {
+    sedeEl.value = '';
+    document.getElementById('sedeDir').style.display = 'none';
+  }
   abrirModal('modalPostula');
 }
 
@@ -1105,6 +1184,17 @@ function init() {
   fijos      = JSON.parse(localStorage.getItem('rg_fij')     || '{}');
   franjas    = JSON.parse(localStorage.getItem('rg_franjas') || '{}');
   init();
+  // Poll Firebase cada 20s para detectar cambios del administrador
+  setInterval(async () => {
+    const changed = await fbPull();
+    if (!changed) return;
+    cfg        = Object.assign({}, DEFAULT_CFG, JSON.parse(localStorage.getItem('rg_cfg') || '{}'));
+    ocupados   = JSON.parse(localStorage.getItem('rg_ocu')     || '{}');
+    pendientes = JSON.parse(localStorage.getItem('rg_pen')     || '{}');
+    fijos      = JSON.parse(localStorage.getItem('rg_fij')     || '{}');
+    franjas    = JSON.parse(localStorage.getItem('rg_franjas') || '{}');
+    renderCalendario();
+  }, 20000);
 })();
 </script>
 </body>
