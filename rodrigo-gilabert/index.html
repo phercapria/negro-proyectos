@@ -18,8 +18,8 @@
       --ocupado-bg:   #ff2d20;
       --ocupado-txt:  #ffffff;
       --libre-bg:     #2a2a2a;
-      --bloq-bg:      #111111;
-      --bloq-border:  #1e1e1e;
+      --bloq-bg:      #2a2a2a;
+      --bloq-border:  #333333;
       --libre-hover:  #333333;
     }
     *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -249,8 +249,8 @@
         -50deg,
         transparent 0px,
         transparent 9px,
-        rgba(255,255,255,.055) 9px,
-        rgba(255,255,255,.055) 10px
+        rgba(0,0,0,.18) 9px,
+        rgba(0,0,0,.18) 10px
       );
       border-bottom: none;
       border-right-color: var(--bloq-border);
@@ -849,7 +849,7 @@ function renderCalendario() {
           const lbl = document.createElement('span');
           lbl.className = 'sede-label';
           const sedeName = sedeVal === 'yb' ? 'Yabrudense' : 'King Pong';
-          lbl.textContent = 'Horario disponible en ' + sedeName;
+          lbl.innerHTML = 'Horario disponible<br>en ' + sedeName;
           cell.appendChild(lbl);
         }
         cell.onclick = () => abrirPostula(fk, s, fecha, di);
