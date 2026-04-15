@@ -225,10 +225,11 @@
       background:var(--libre-hover);
     }
     .cal-cell.libre:hover::after {
-      content:'+ Solicitar';
+      content:'+ Solicitar 1 hora';
       position:absolute; inset:0;
       display:flex; align-items:center; justify-content:center;
-      font-size:.68rem; font-weight:700; color:var(--verde);
+      font-size:.65rem; font-weight:700; color:var(--verde);
+      background:var(--libre-hover);
     }
     .cal-cell.pendiente {
       background:rgba(255,180,0,0.10);
@@ -276,12 +277,16 @@
       letter-spacing:.04em;
     }
 
-    /* Badge de sede en celdas disponibles */
-    .sede-badge {
-      position:absolute; bottom:3px; right:4px;
-      font-size:.5rem; font-weight:900; color:var(--verde);
-      opacity:.75; letter-spacing:.06em; pointer-events:none;
+    /* Leyenda de sede en celdas disponibles */
+    .sede-label {
+      position:absolute; inset:0;
+      display:flex; align-items:center; justify-content:center;
+      text-align:center; padding:2px 4px;
+      font-size:.5rem; font-weight:700; color:var(--verde);
+      opacity:.65; line-height:1.35; pointer-events:none;
+      word-break:break-word;
     }
+    .cal-cell.libre:hover .sede-label { display:none; }
 
     /* ── PINES DE SEDES ── */
     .sedes-strip {
@@ -837,14 +842,15 @@ function renderCalendario() {
       cell.dataset.slot  = s;
       cell.dataset.dia   = di;
 
-      // Badge de sede en celdas disponibles
+      // Leyenda de sede en celdas disponibles
       if (!ocup && !pend && !bloq) {
         const sedeVal = franjas[di + '_' + s];
         if (sedeVal && sedeVal !== true) {
-          const badge = document.createElement('span');
-          badge.className = 'sede-badge';
-          badge.textContent = sedeVal === 'yb' ? 'YB' : 'KP';
-          cell.appendChild(badge);
+          const lbl = document.createElement('span');
+          lbl.className = 'sede-label';
+          const sedeName = sedeVal === 'yb' ? 'Yabrudense' : 'King Pong';
+          lbl.textContent = 'Horario disponible en ' + sedeName;
+          cell.appendChild(lbl);
         }
         cell.onclick = () => abrirPostula(fk, s, fecha, di);
       }
