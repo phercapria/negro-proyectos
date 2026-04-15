@@ -18,8 +18,8 @@
       --ocupado-bg:   #ff2d20;
       --ocupado-txt:  #ffffff;
       --libre-bg:     #2a2a2a;
-      --bloq-bg:      #080808;
-      --bloq-border:  #161616;
+      --bloq-bg:      #111111;
+      --bloq-border:  #1e1e1e;
       --libre-hover:  #333333;
     }
     *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -248,11 +248,11 @@
       background-image: repeating-linear-gradient(
         -50deg,
         transparent 0px,
-        transparent 7px,
-        rgba(255,255,255,.018) 7px,
-        rgba(255,255,255,.018) 8px
+        transparent 9px,
+        rgba(255,255,255,.055) 9px,
+        rgba(255,255,255,.055) 10px
       );
-      border-bottom: none;          /* merges with next blocked cell */
+      border-bottom: none;
       border-right-color: var(--bloq-border);
       cursor: default;
     }
@@ -281,10 +281,10 @@
     .sede-label {
       position:absolute; inset:0;
       display:flex; align-items:center; justify-content:center;
-      text-align:center; padding:2px 4px;
-      font-size:.5rem; font-weight:700; color:var(--verde);
-      opacity:.65; line-height:1.35; pointer-events:none;
-      word-break:break-word;
+      text-align:center; padding:2px 5px;
+      font-size:.65rem; font-weight:600; color:var(--verde);
+      opacity:.7; letter-spacing:.04em; line-height:1.3;
+      pointer-events:none;
     }
     .cal-cell.libre:hover .sede-label { display:none; }
 
