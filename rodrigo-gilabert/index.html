@@ -674,6 +674,23 @@ const FB_KEYS = ['rg_ocu','rg_pen','rg_fij','rg_cfg','rg_franjas','rg_alumnos'];
 const _lsSet  = Storage.prototype.setItem;
 let _fbKnown  = null;
 
+// Push a Firebase (solo pendientes — el sitio público solo escribe solicitudes)
+const _lsSetPub = Storage.prototype.setItem;
+async function fbPush() {
+  const data = {};
+  for (const k of FB_KEYS) {
+    const v = localStorage.getItem(k);
+    if (v != null) data[k] = v;
+  }
+  try {
+    await fetch(FB_DB + '.json', {
+      method: 'PATCH',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(data)
+    });
+  } catch(e) { console.warn('fbPush:', e); }
+}
+
 // Retorna true si los datos cambiaron
 async function fbPull() {
   try {
@@ -1037,6 +1054,7 @@ function enviarSolicitud() {
   const sk = slotKey(slotSel.fecha, slotSel.slot);
   pendientes[sk] = { nombre, wa: waNum, sede, nivel, nota, fecha: slotSel.fecha, slot: slotSel.slot, dia: slotSel.diaIdx };
   guardarPen();
+  fbPush(); // sincronizar solicitud a Firebase para que aparezca en el admin
   renderCalendario();
 
   const horaIni  = slotAHora(slotSel.slot);
