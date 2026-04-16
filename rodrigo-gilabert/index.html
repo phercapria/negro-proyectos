@@ -596,7 +596,7 @@
       <select id="postHorario" onchange="cambiarHorarioModal(this.value)"></select>
     </div>
     <div class="form-group">
-      <label>Tu nombre completo *</label>
+      <label>Nombre y apellido *</label>
       <input type="text" id="postNombre" placeholder="Ej: Juan García" maxlength="40">
     </div>
     <div class="form-group">
@@ -852,7 +852,8 @@ function renderCalendario() {
       const ocup  = !!ocupados[sk] || !!fijos[fijoKey] || SIEMPRE_OCUPADO.some(x => x.dia === di && x.slot === s);
       const pend  = !ocup && !!pendientes[sk];
       const bloq = !ocup && !pend && esBloqueado(di, s);
-      cell.className = 'cal-cell ' + (ocup ? 'ocupado' : pend ? 'pendiente' : bloq ? 'bloqueado' : 'libre');
+      // En el sitio público los pendientes se muestran como ocupados (nadie más puede pedirlos)
+      cell.className = 'cal-cell ' + ((ocup || pend) ? 'ocupado' : bloq ? 'bloqueado' : 'libre');
       // Tooltip con nombre en slots ocupados (admin)
       const infoOcup = fijos[fijoKey] ? fijos[fijoKey] : (ocupados[sk] && typeof ocupados[sk]==='object' ? ocupados[sk] : null);
       if (ocup && infoOcup && infoOcup.nombre) cell.title = infoOcup.nombre;
@@ -1064,6 +1065,7 @@ function enviarSolicitud() {
   const msg = [
     `Hola Rodrigo, me gustaría tomar clases de tenis de mesa.`,
     ``,
+    `*Nombre y apellido:* ${nombre}`,
     `*Horario solicitado:* ${fechaStr.charAt(0).toUpperCase()+fechaStr.slice(1)}, ${horaIni} – ${horaFin} hs`,
     `*Sede preferida:* ${sede}`,
     `*Mi nivel:* ${nivel}`,
